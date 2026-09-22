@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finance &amp; Profit"
+            android:textColor="#146B4A"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Tamanna Enterprise financial summary"
+            android:textColor="#5F6368"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="22dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Total Sales&#10;৳ 0"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Total Purchase&#10;৳ 0"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Gross Profit&#10;৳ 0"
+            android:textColor="#146B4A"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Business Expenses&#10;৳ 0"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Net Profit&#10;৳ 0"
+            android:textColor="#146B4A"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvFinanceStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="Finance summary ready"
+            android:textColor="#5F6368" />
+
+        <Button
+            android:id="@+id/btnRefreshFinance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Refresh Finance" />
+    </LinearLayout>
+</ScrollView>
