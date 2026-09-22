@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,11 +33,35 @@
             android:paddingBottom="8dp"/>
 
         <TextView
+            android:id="@+id/tvAdminEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Permanent admin Gmail: Not connected"
+            android:text="Admin Gmail: Not connected"
             android:textSize="16sp"
+            android:paddingBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvAdminStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Admin Status: NOT CONNECTED"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:paddingBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnConnectAdminGmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connect Admin Gmail"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="প্রথমবার সংযুক্ত Gmail-ই Admin Gmail হিসেবে স্থায়ী থাকবে। অন্য Gmail দিয়ে পরিবর্তন করা যাবে না।"
+            android:textSize="14sp"
+            android:paddingTop="8dp"
+            android:paddingBottom="20dp"/>
 
         <TextView
             android:layout_width="match_parent"
