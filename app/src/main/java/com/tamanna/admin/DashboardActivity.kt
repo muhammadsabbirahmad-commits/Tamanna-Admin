@@ -14,7 +14,7 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, PartnerManagementActivity::class.java))
         }
         findViewById<Button>(R.id.btnBusiness).setOnClickListener {
-            // Business Overview will be added in the next step.
+            startActivity(Intent(this, BusinessOverviewActivity::class.java))
         }
         findViewById<Button>(R.id.btnFinance).setOnClickListener {
             // Finance & Profit will be added in the next step.
