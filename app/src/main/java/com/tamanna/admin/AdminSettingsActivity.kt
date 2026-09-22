@@ -9,6 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 
 class AdminSettingsActivity : AppCompatActivity() {
 
@@ -20,44 +23,75 @@ class AdminSettingsActivity : AppCompatActivity() {
 
     private lateinit var tvEmail: TextView
     private lateinit var tvStatus: TextView
+    private lateinit var firebaseAuth: FirebaseAuth
 
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
-            val account = task.getResult(Exception::class.java)
+            val account = task.getResult(ApiException::class.java)
             val email = account.email?.trim().orEmpty()
+            val idToken = account.idToken.orEmpty()
 
-            if (email.isBlank()) {
-                Toast.makeText(this, "Google account-এর email পাওয়া যায়নি।", Toast.LENGTH_LONG).show()
+            if (email.isBlank() || idToken.isBlank()) {
+                Toast.makeText(this, "Google account-এর email বা ID token পাওয়া যায়নি।", Toast.LENGTH_LONG).show()
                 return@registerForActivityResult
             }
 
-            val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-            val existing = prefs.getString(ADMIN_EMAIL, null)
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            firebaseAuth.signInWithCredential(credential)
+                .addOnSuccessListener { authResult ->
+                    val verifiedEmail = authResult.user?.email?.trim().orEmpty()
+                    if (verifiedEmail.isBlank()) {
+                        Toast.makeText(this, "Firebase-এ Google account যাচাই করা যায়নি।", Toast.LENGTH_LONG).show()
+                        return@addOnSuccessListener
+                    }
 
-            if (existing.isNullOrBlank()) {
-                prefs.edit()
-                    .putString(ADMIN_EMAIL, email)
-                    .putBoolean(ADMIN_CONNECTED, true)
-                    .apply()
-                refreshAdminIdentity()
-                Toast.makeText(this, "Admin Gmail সফলভাবে স্থায়ীভাবে সংযুক্ত হয়েছে।", Toast.LENGTH_LONG).show()
-            } else if (existing.equals(email, ignoreCase = true)) {
-                prefs.edit().putBoolean(ADMIN_CONNECTED, true).apply()
-                refreshAdminIdentity()
-                Toast.makeText(this, "এই Gmail-ই বর্তমান Admin Gmail।", Toast.LENGTH_SHORT).show()
-            } else {
-                refreshAdminIdentity()
-                Toast.makeText(
-                    this,
-                    "অন্য Gmail অনুমোদিত নয়। বর্তমান Admin Gmail পরিবর্তন করা যাবে না।",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+                    val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
+                    val existing = prefs.getString(ADMIN_EMAIL, null)
+
+                    if (existing.isNullOrBlank()) {
+                        prefs.edit()
+                            .putString(ADMIN_EMAIL, verifiedEmail)
+                            .putBoolean(ADMIN_CONNECTED, true)
+                            .apply()
+                        refreshAdminIdentity()
+                        Toast.makeText(this, "Admin Gmail সফলভাবে Firebase-এর মাধ্যমে সংযুক্ত হয়েছে।", Toast.LENGTH_LONG).show()
+                    } else if (existing.equals(verifiedEmail, ignoreCase = true)) {
+                        prefs.edit().putBoolean(ADMIN_CONNECTED, true).apply()
+                        refreshAdminIdentity()
+                        Toast.makeText(this, "এই Gmail-ই বর্তমান Admin Gmail।", Toast.LENGTH_SHORT).show()
+                    } else {
+                        firebaseAuth.signOut()
+                        refreshAdminIdentity()
+                        Toast.makeText(
+                            this,
+                            "অন্য Gmail অনুমোদিত নয়। বর্তমান Admin Gmail পরিবর্তন করা যাবে না।",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        this,
+                        "Firebase Google Login ব্যর্থ হয়েছে: ${e.message ?: "আবার চেষ্টা করুন।"}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+        } catch (e: ApiException) {
+            Toast.makeText(
+                this,
+                "Google Sign-In ব্যর্থ হয়েছে। Error code: ${e.statusCode}",
+                Toast.LENGTH_LONG
+            ).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "Google account সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                "Google account সংযোগ ব্যর্থ হয়েছে। ${e.message ?: "আবার চেষ্টা করুন।"}",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -67,6 +101,7 @@ class AdminSettingsActivity : AppCompatActivity() {
 
         tvEmail = findViewById(R.id.tvAdminEmail)
         tvStatus = findViewById(R.id.tvAdminStatus)
+        firebaseAuth = FirebaseAuth.getInstance()
 
         findViewById<Button>(R.id.btnConnectAdminGmail).setOnClickListener {
             connectAdminGmail()
@@ -77,6 +112,7 @@ class AdminSettingsActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnAdminLogout).setOnClickListener {
+            firebaseAuth.signOut()
             getSharedPreferences("admin_security", MODE_PRIVATE)
                 .edit()
                 .putBoolean("admin_unlocked", false)
@@ -96,6 +132,7 @@ class AdminSettingsActivity : AppCompatActivity() {
         val existing = prefs.getString(ADMIN_EMAIL, null)
 
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
 
