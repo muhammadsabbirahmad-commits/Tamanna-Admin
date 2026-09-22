@@ -12,6 +12,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class AdminSettingsActivity : AppCompatActivity() {
 
@@ -24,6 +26,7 @@ class AdminSettingsActivity : AppCompatActivity() {
     private lateinit var tvEmail: TextView
     private lateinit var tvStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firestore: FirebaseFirestore
 
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -48,29 +51,52 @@ class AdminSettingsActivity : AppCompatActivity() {
                         return@addOnSuccessListener
                     }
 
-                    val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-                    val existing = prefs.getString(ADMIN_EMAIL, null)
-
-                    if (existing.isNullOrBlank()) {
-                        prefs.edit()
-                            .putString(ADMIN_EMAIL, verifiedEmail)
-                            .putBoolean(ADMIN_CONNECTED, true)
-                            .apply()
-                        refreshAdminIdentity()
-                        Toast.makeText(this, "Admin Gmail সফলভাবে Firebase-এর মাধ্যমে সংযুক্ত হয়েছে।", Toast.LENGTH_LONG).show()
-                    } else if (existing.equals(verifiedEmail, ignoreCase = true)) {
-                        prefs.edit().putBoolean(ADMIN_CONNECTED, true).apply()
-                        refreshAdminIdentity()
-                        Toast.makeText(this, "এই Gmail-ই বর্তমান Admin Gmail।", Toast.LENGTH_SHORT).show()
-                    } else {
-                        firebaseAuth.signOut()
-                        refreshAdminIdentity()
-                        Toast.makeText(
-                            this,
-                            "অন্য Gmail অনুমোদিত নয়। বর্তমান Admin Gmail পরিবর্তন করা যাবে না।",
-                            Toast.LENGTH_LONG
-                        ).show()
+                    val uid = authResult.user?.uid.orEmpty()
+                    if (uid.isBlank()) {
+                        Toast.makeText(this, "Firebase UID পাওয়া যায়নি।", Toast.LENGTH_LONG).show()
+                        return@addOnSuccessListener
                     }
+
+                    firestore.collection("admin_registry").document("primary").get()
+                        .addOnSuccessListener { doc ->
+                            val existingUid = doc.getString("uid").orEmpty()
+
+                            if (existingUid.isBlank()) {
+                                val adminData = hashMapOf(
+                                    "uid" to uid,
+                                    "email" to verifiedEmail,
+                                    "role" to "admin"
+                                )
+
+                                firestore.collection("admin_registry").document("primary")
+                                    .set(adminData, SetOptions.merge())
+                                    .addOnSuccessListener {
+                                        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                            .putString(ADMIN_EMAIL, verifiedEmail)
+                                            .putBoolean(ADMIN_CONNECTED, true)
+                                            .apply()
+                                        refreshAdminIdentity()
+                                        Toast.makeText(this, "Admin Gmail ও Server Admin ID স্থায়ীভাবে সংযুক্ত হয়েছে।", Toast.LENGTH_LONG).show()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(this, "Server Admin সংরক্ষণ ব্যর্থ: ${e.message ?: "Firestore Rules পরীক্ষা করুন।"}", Toast.LENGTH_LONG).show()
+                                    }
+                            } else if (existingUid == uid) {
+                                getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                    .putString(ADMIN_EMAIL, verifiedEmail)
+                                    .putBoolean(ADMIN_CONNECTED, true)
+                                    .apply()
+                                refreshAdminIdentity()
+                                Toast.makeText(this, "Server Admin যাচাই সফল হয়েছে।", Toast.LENGTH_SHORT).show()
+                            } else {
+                                firebaseAuth.signOut()
+                                refreshAdminIdentity()
+                                Toast.makeText(this, "এই Gmail Admin নয়। বর্তমান Server Admin পরিবর্তন করা যাবে না।", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Server Admin যাচাই ব্যর্থ: ${e.message ?: "Firestore Rules/সংযোগ পরীক্ষা করুন।"}", Toast.LENGTH_LONG).show()
+                        }
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(
@@ -102,6 +128,7 @@ class AdminSettingsActivity : AppCompatActivity() {
         tvEmail = findViewById(R.id.tvAdminEmail)
         tvStatus = findViewById(R.id.tvAdminStatus)
         firebaseAuth = FirebaseAuth.getInstance()
+        firestore = FirebaseFirestore.getInstance()
 
         findViewById<Button>(R.id.btnConnectAdminGmail).setOnClickListener {
             connectAdminGmail()
