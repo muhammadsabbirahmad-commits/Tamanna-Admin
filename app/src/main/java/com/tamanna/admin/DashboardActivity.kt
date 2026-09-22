@@ -20,7 +20,7 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, FinanceProfitActivity::class.java))
         }
         findViewById<Button>(R.id.btnSettings).setOnClickListener {
-            // Admin Settings will be added in the next step.
+            startActivity(Intent(this, AdminSettingsActivity::class.java))
         }
     }
 }
