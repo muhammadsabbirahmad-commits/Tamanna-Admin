@@ -100,3 +100,4 @@
             android:text="Admin Logout"/>
     </LinearLayout>
 </ScrollView>
+<!-- Synchronized with AdminSettingsActivity. -->
