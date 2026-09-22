@@ -19,11 +19,20 @@
         android:layout_height="wrap_content"
         android:text="Admin Control Center"
         android:textSize="16sp"
-        android:layout_marginBottom="32dp"/>
+        android:layout_marginBottom="24dp"/>
+
+    <EditText
+        android:id="@+id/etMasterPin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Master PIN"
+        android:inputType="textPassword"
+        android:singleLine="true"
+        android:layout_marginBottom="16dp"/>
 
     <Button
         android:id="@+id/btnMasterPin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enter Master PIN"/>
+        android:text="Verify Master PIN"/>
 </LinearLayout>
