@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Business Overview"
+            android:textColor="#146B4A"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Tamanna Enterprise summary"
+            android:textColor="#5F6368"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:text="Total Products\n0"
+                android:textColor="#222222"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:layout_marginTop="12dp"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:text="Current Stock\n0"
+                android:textColor="#222222"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:layout_marginTop="12dp"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:text="Today's Sales\n৳ 0"
+                android:textColor="#222222"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:layout_marginTop="12dp"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:text="Today's Purchase\n৳ 0"
+                android:textColor="#222222"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:layout_marginTop="12dp"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:text="Today's Profit\n৳ 0"
+                android:textColor="#146B4A"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvOverviewStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="Overview ready"
+            android:textColor="#5F6368"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnRefreshOverview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Refresh Overview" />
+
+    </LinearLayout>
+</ScrollView>
