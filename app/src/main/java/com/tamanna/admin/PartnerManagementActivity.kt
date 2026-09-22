@@ -49,11 +49,9 @@ class PartnerManagementActivity : AppCompatActivity() {
 
         val nameInput = EditText(this).apply {
             hint = "Partner name"
-            singleLine = true
         }
         val emailInput = EditText(this).apply {
             hint = "Gmail address"
-            singleLine = true
             inputType = android.text.InputType.TYPE_CLASS_TEXT or
                     android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         }
