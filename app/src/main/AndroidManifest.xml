@@ -18,6 +18,9 @@
             android:name=".FinanceProfitActivity"
             android:exported="false" />
         <activity
+            android:name=".AdminSettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
