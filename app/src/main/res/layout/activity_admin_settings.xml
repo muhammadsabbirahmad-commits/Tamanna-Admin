@@ -67,5 +67,11 @@
             android:layout_height="wrap_content"
             android:text="Refresh Settings"/>
 
+        <Button
+            android:id="@+id/btnAdminLogout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Admin Logout"/>
     </LinearLayout>
 </ScrollView>
