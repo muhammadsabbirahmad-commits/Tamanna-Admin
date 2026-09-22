@@ -2,27 +2,20 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
     match /admin_registry/primary {
-      // The first authenticated Google account may claim the empty Admin slot.
-      // After that, only the registered Admin UID can read or update it.
+      allow read: if request.auth != null
+                    && (!exists(/databases/$(database)/documents/admin_registry/primary)
+                        || resource.data.uid == request.auth.uid);
       allow create: if request.auth != null
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.role == 'admin'
                     && !exists(/databases/$(database)/documents/admin_registry/primary);
-
-      allow read: if request.auth != null
-                   && resource.data.uid == request.auth.uid;
-
       allow update: if request.auth != null
                     && resource.data.uid == request.auth.uid
                     && request.resource.data.uid == resource.data.uid
                     && request.resource.data.role == 'admin';
-
       allow delete: if false;
     }
-
-    // Deny every other Firestore document unless a future rule explicitly allows it.
     match /{document=**} {
       allow read, write: if false;
     }
