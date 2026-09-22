@@ -1,5 +1,6 @@
 package com.tamanna.admin
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -20,7 +21,8 @@ class MainActivity : AppCompatActivity() {
         val pinInput = findViewById<EditText>(R.id.etMasterPin)
         findViewById<Button>(R.id.btnMasterPin).setOnClickListener {
             if (sha256(pinInput.text.toString()) == MASTER_PIN_HASH) {
-                Toast.makeText(this, "Master PIN verified.", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, DashboardActivity::class.java))
+                finish()
             } else {
                 pinInput.text.clear()
                 Toast.makeText(this, "ভুল Master PIN। আবার চেষ্টা করুন।", Toast.LENGTH_SHORT).show()
