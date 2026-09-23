@@ -34,6 +34,7 @@ class DashboardActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnPartners).setOnClickListener { startActivity(Intent(this, PartnerManagementActivity::class.java)) }
         findViewById<Button>(R.id.btnProducts).setOnClickListener { startActivity(Intent(this, EnterpriseProductsActivity::class.java)) }
         findViewById<Button>(R.id.btnSalesPurchase).setOnClickListener { startActivity(Intent(this, EnterpriseSalesPurchaseActivity::class.java)) }
+        findViewById<Button>(R.id.btnReports).setOnClickListener { startActivity(Intent(this, EnterpriseDateRangeReportActivity::class.java)) }
         findViewById<Button>(R.id.btnBusiness).setOnClickListener { startActivity(Intent(this, BusinessOverviewActivity::class.java)) }
         findViewById<Button>(R.id.btnFinance).setOnClickListener { startActivity(Intent(this, FinanceProfitActivity::class.java)) }
         findViewById<Button>(R.id.btnSettings).setOnClickListener { startActivity(Intent(this, AdminSettingsActivity::class.java)) }
