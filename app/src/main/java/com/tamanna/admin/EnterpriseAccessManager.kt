@@ -22,16 +22,31 @@ object EnterpriseAccessManager {
 
     fun withEnterpriseAdmin(context: Context, onReady: (FirebaseFirestore) -> Unit, onError: (String) -> Unit) {
         try {
-            val account = GoogleSignIn.getLastSignedInAccount(context)
-            val token = account?.idToken.orEmpty()
-            val email = account?.email.orEmpty().trim()
-            if (token.isBlank() || email.isBlank()) {
-                onError("Admin Gmail session পাওয়া যায়নি। Admin Settings থেকে Gmail সংযুক্ত করুন।")
-                return
-            }
-            val app = EnterpriseFirebaseConnection.getFirestore(context).app
-            val auth = FirebaseAuth.getInstance(app)
-            auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null))
+            // Enterprise Firebase requires an ID token whose audience belongs to
+            // the Enterprise project's Web OAuth client, not the Admin project's client.
+            val enterpriseWebClientId =
+                "241311598063-d6pqnutv6598pj4lmsikqs7bsfs0m0bs.apps.googleusercontent.com"
+
+            val options = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(
+                com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN
+            )
+                .requestIdToken(enterpriseWebClientId)
+                .requestEmail()
+                .build()
+
+            val googleClient = GoogleSignIn.getClient(context, options)
+            googleClient.silentSignIn()
+                .addOnSuccessListener { account ->
+                    val token = account.idToken.orEmpty()
+                    val email = account.email.orEmpty().trim()
+                    if (token.isBlank() || email.isBlank()) {
+                        onError("Admin Gmail-এর Enterprise authorization token পাওয়া যায়নি।")
+                        return@addOnSuccessListener
+                    }
+
+                    val app = EnterpriseFirebaseConnection.getFirestore(context).app
+                    val auth = FirebaseAuth.getInstance(app)
+                    auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null))
                 .addOnSuccessListener {
                     val user = auth.currentUser
                     if (user == null || !user.email.orEmpty().equals(email, true)) {
@@ -63,8 +78,9 @@ object EnterpriseAccessManager {
                         }
                         .addOnFailureListener { onError("Enterprise Admin verification ব্যর্থ হয়েছে।") }
                 }
-                .addOnFailureListener { onError("Enterprise Firebase Admin login ব্যর্থ: ${it.localizedMessage ?: "আবার চেষ্টা করুন।"}") }
-        } catch (e: Exception) { onError(e.localizedMessage ?: "Enterprise Admin connection ব্যর্থ হয়েছে।") }
+                    .addOnFailureListener { onError("Enterprise Firebase Admin login ব্যর্থ: ${it.localizedMessage ?: "আবার চেষ্টা করুন।"}") }
+                }
+                .addOnFailureListener { onError("Admin Gmail-এর Enterprise Google token পাওয়া যায়নি। Admin Gmail একবার পুনরায় সংযুক্ত করুন।") }        } catch (e: Exception) { onError(e.localizedMessage ?: "Enterprise Admin connection ব্যর্থ হয়েছে।") }
     }
 
     fun loadRequests(context: Context, onResult: (List<EnterpriseAccessRequest>) -> Unit, onError: (String) -> Unit) {
