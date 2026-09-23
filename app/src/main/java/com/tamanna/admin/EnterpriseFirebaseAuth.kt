@@ -46,28 +46,40 @@ object EnterpriseFirebaseAuth {
         email: String
     ): Task<Boolean> {
         val firestore = FirebaseFirestore.getInstance(auth.app)
-        val adminConfig = firestore.collection("appConfig").document("admin")
-        val accessUser = firestore.collection("accessUsers").document(uid)
+        val businessId = AdminBusinessContext.getBusinessId(
+            auth.app.applicationContext
+        ).trim()
 
-        return adminConfig.get(Source.SERVER).continueWithTask { configTask ->
-            if (!configTask.isSuccessful) {
+        if (businessId.isBlank() || businessId == AdminBusinessContext.DEFAULT_ID) {
+            return Tasks.forResult(false)
+        }
+
+        val memberRef = firestore.collection("businesses")
+            .document(businessId)
+            .collection("members")
+            .document(uid)
+
+        return memberRef.get(Source.SERVER).continueWithTask { memberTask ->
+            if (!memberTask.isSuccessful) {
                 return@continueWithTask Tasks.forResult(false)
             }
 
-            val config = configTask.result
-            if (config.exists()) {
-                val serverUid = config.getString("uid").orEmpty()
-                val serverEmail = config.getString("email").orEmpty()
-                val role = config.getString("role").orEmpty()
-
-                return@continueWithTask Tasks.forResult(
-                    serverUid == uid &&
-                        serverEmail.equals(email, ignoreCase = true) &&
-                        role == "ADMIN"
-                )
+            val member = memberTask.result
+            if (!member.exists()) {
+                return@continueWithTask Tasks.forResult(false)
             }
 
-            return@continueWithTask Tasks.forResult(false)
+            val memberEmail = member.getString("email").orEmpty()
+            val role = member.getString("role").orEmpty()
+            val approved = member.getBoolean("approved") == true
+            val blocked = member.getBoolean("blocked") == true
+
+            Tasks.forResult(
+                member.getString("uid").orEmpty() == uid &&
+                    memberEmail.equals(email, ignoreCase = true) &&
+                    role == "OWNER" &&
+                    approved &&
+                    !blocked
+            )
         }
-    }
-}
+    }}
