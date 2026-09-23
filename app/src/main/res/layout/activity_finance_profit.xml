@@ -68,6 +68,18 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvFinanceNetProfit"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Net Profit&#10;৳ 0"
+            android:textColor="#146B4A"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="88dp"
             android:layout_marginTop="12dp"
