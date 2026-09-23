@@ -80,7 +80,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
                         {Toast.makeText(this,"User ACTIVE করা হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
                 }
                 reject.setOnClickListener {
-                    EnterpriseAccessManager.updateRequest(this,request,EnterpriseAccessManager.REJECTED,0L,0L,request.notificationsEnabled,
+                    EnterpriseAccessManager.updateRequest(this,enterpriseGoogleLauncher,request,EnterpriseAccessManager.REJECTED,0L,0L,request.notificationsEnabled,
                         {Toast.makeText(this,"Request REJECTED হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
                 }
             }
