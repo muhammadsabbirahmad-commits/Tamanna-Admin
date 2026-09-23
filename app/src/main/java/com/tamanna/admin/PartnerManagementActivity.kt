@@ -49,6 +49,7 @@ class PartnerManagementActivity : AppCompatActivity() {
         list.setOnItemClickListener { _, _, position, _ -> showPartnerActions(position) }
         loadPartners()
         loadEnterprisePartners()
+        loadEnterpriseMembership()
     }
 
     private fun partnersRef() = firestore.collection("admin_data").document("partners").collection("items")
@@ -173,6 +174,13 @@ class PartnerManagementActivity : AppCompatActivity() {
                 enterpriseAdapter.notifyDataSetChanged()
                 enterpriseStatus.text = message
             }
+        }
+    }
+
+    private fun loadEnterpriseMembership() {
+        enterpriseMembershipStatus.text = "Enterprise membership যাচাই হচ্ছে..."
+        EnterpriseMembershipReader.load(this) { _, _, message ->
+            runOnUiThread { enterpriseMembershipStatus.text = message }
         }
     }
 
