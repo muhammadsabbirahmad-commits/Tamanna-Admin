@@ -6,6 +6,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 class FinanceProfitActivity : AppCompatActivity() {
+    override fun onResume() {
+        super.onResume()
+        AdminSecurityGuard.requireUnlocked(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_finance_profit)
