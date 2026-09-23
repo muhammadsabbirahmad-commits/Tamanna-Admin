@@ -33,7 +33,7 @@ object EnterpriseFirebaseAuth {
                     return@continueWithTask Tasks.forResult(false)
                 }
 
-                ensureAdminMembership(context, auth, user.uid, email)
+                verifyEnterpriseAdmin(context, auth, user.uid, email)
             }
         } catch (e: Exception) {
             Tasks.forResult(false)
@@ -60,47 +60,51 @@ object EnterpriseFirebaseAuth {
         } catch (e: Exception) { Tasks.forResult(null) }
     }
 
-    private fun ensureAdminMembership(
+    private fun verifyEnterpriseAdmin(
         context: Context,
         auth: FirebaseAuth,
         uid: String,
         email: String
     ): Task<Boolean> {
         val firestore = FirebaseFirestore.getInstance(auth.app)
-        val businessId = AdminBusinessContext.getBusinessId(context).trim()
 
-        if (businessId.isBlank() || businessId == AdminBusinessContext.DEFAULT_ID) {
-            return Tasks.forResult(false)
-        }
+        // New authorization record. This is independent of Business ID,
+        // License Code, and the protected Tamanna Admin security system.
+        return firestore.collection("appConfig").document("admin")
+            .get(Source.SERVER)
+            .continueWithTask { configTask ->
+                if (!configTask.isSuccessful) {
+                    return@continueWithTask Tasks.forResult(false)
+                }
 
-        val memberRef = firestore.collection("businesses")
-            .document(businessId)
-            .collection("members")
-            .document(uid)
+                val config = configTask.result
+                if (config.exists()) {
+                    val serverUid = config.getString("uid").orEmpty()
+                    val serverEmail = config.getString("email").orEmpty()
+                    val role = config.getString("role").orEmpty().uppercase()
 
-        return memberRef.get(Source.SERVER).continueWithTask { memberTask ->
-            if (!memberTask.isSuccessful) {
-                return@continueWithTask Tasks.forResult(false)
+                    return@continueWithTask Tasks.forResult(
+                        serverUid == uid &&
+                            serverEmail.equals(email, ignoreCase = true) &&
+                            role == "ADMIN"
+                    )
+                }
+
+                // Backward-compatible bridge: an already-authorized Enterprise
+                // ADMIN account can continue to be recognized while the new
+                // appConfig/admin record is introduced. No Business ID is needed.
+                firestore.collection("accessUsers").document(uid)
+                    .get(Source.SERVER)
+                    .continueWith { legacyTask ->
+                        if (!legacyTask.isSuccessful) return@continueWith false
+                        val legacy = legacyTask.result
+                        legacy.exists() &&
+                            legacy.getString("uid").orEmpty() == uid &&
+                            legacy.getString("email").orEmpty().equals(email, ignoreCase = true) &&
+                            legacy.getString("role").orEmpty().uppercase() == "ADMIN" &&
+                            legacy.getBoolean("approved") == true &&
+                            legacy.getBoolean("blocked") != true
+                    }
             }
-
-            val member = memberTask.result
-            if (!member.exists()) {
-                return@continueWithTask Tasks.forResult(false)
-            }
-
-            val memberUid = member.getString("uid").orEmpty()
-            val memberEmail = member.getString("email").orEmpty()
-            val role = member.getString("role").orEmpty()
-            val approved = member.getBoolean("approved") == true
-            val blocked = member.getBoolean("blocked") == true
-
-            Tasks.forResult(
-                memberUid == uid &&
-                    memberEmail.equals(email, ignoreCase = true) &&
-                    role == "OWNER" &&
-                    approved &&
-                    !blocked
-            )
-        }
     }
 }
