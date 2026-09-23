@@ -37,7 +37,8 @@
                 android:layout_height="90dp"
                 android:background="#FFFFFF"
                 android:gravity="center"
-                android:text="Total Products\n0"
+                android:id="@+id/tvOverviewProducts"
+                android:text="Total Products&#10;0"
                 android:textColor="#222222"
                 android:textSize="19sp"
                 android:textStyle="bold" />
@@ -48,7 +49,8 @@
                 android:layout_marginTop="12dp"
                 android:background="#FFFFFF"
                 android:gravity="center"
-                android:text="Current Stock\n0"
+                android:id="@+id/tvOverviewStock"
+                android:text="Current Stock&#10;0"
                 android:textColor="#222222"
                 android:textSize="19sp"
                 android:textStyle="bold" />
@@ -59,7 +61,8 @@
                 android:layout_marginTop="12dp"
                 android:background="#FFFFFF"
                 android:gravity="center"
-                android:text="Today's Sales\n৳ 0"
+                android:id="@+id/tvOverviewSales"
+                android:text="Today's Sales&#10;৳ 0"
                 android:textColor="#222222"
                 android:textSize="19sp"
                 android:textStyle="bold" />
@@ -70,7 +73,8 @@
                 android:layout_marginTop="12dp"
                 android:background="#FFFFFF"
                 android:gravity="center"
-                android:text="Today's Purchase\n৳ 0"
+                android:id="@+id/tvOverviewPurchase"
+                android:text="Today's Purchase&#10;৳ 0"
                 android:textColor="#222222"
                 android:textSize="19sp"
                 android:textStyle="bold" />
@@ -81,7 +85,8 @@
                 android:layout_marginTop="12dp"
                 android:background="#FFFFFF"
                 android:gravity="center"
-                android:text="Today's Profit\n৳ 0"
+                android:id="@+id/tvOverviewProfit"
+                android:text="Today's Profit&#10;৳ 0"
                 android:textColor="#146B4A"
                 android:textSize="19sp"
                 android:textStyle="bold" />
