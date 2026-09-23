@@ -33,6 +33,7 @@ class PartnerManagementActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!AdminSecurityGuard.requireUnlocked(this)) return
         setContentView(R.layout.activity_partner_management)
         firestore = FirebaseFirestore.getInstance()
         emptyText = findViewById(R.id.tvEmpty)
