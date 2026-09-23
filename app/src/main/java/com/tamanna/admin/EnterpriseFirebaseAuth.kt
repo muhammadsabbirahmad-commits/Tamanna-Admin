@@ -40,6 +40,26 @@ object EnterpriseFirebaseAuth {
         }
     }
 
+    data class ResolvedBusiness(val businessId: String, val businessName: String)
+
+    fun resolveBusinessFromLicense(context: Context, licenseCode: String, email: String): Task<ResolvedBusiness?> {
+        return try {
+            val app = EnterpriseFirebaseConnection.getFirestore(context).app
+            val auth = FirebaseAuth.getInstance(app)
+            val user = auth.currentUser ?: return Tasks.forResult(null)
+            if (user.email?.trim()?.equals(email.trim(), ignoreCase = true) != true) return Tasks.forResult(null)
+            FirebaseFirestore.getInstance(app).collection("licenses").document(licenseCode.trim().uppercase())
+                .get(Source.SERVER).continueWith { task ->
+                    if (!task.isSuccessful) return@continueWith null
+                    val doc = task.result
+                    if (!doc.exists()) return@continueWith null
+                    val id = doc.getString("businessId").orEmpty().trim()
+                    if (id.isBlank() || id == AdminBusinessContext.DEFAULT_ID) null
+                    else ResolvedBusiness(id, doc.getString("businessName").orEmpty().trim())
+                }
+        } catch (e: Exception) { Tasks.forResult(null) }
+    }
+
     private fun ensureAdminMembership(
         context: Context,
         auth: FirebaseAuth,
