@@ -21,6 +21,11 @@ class PartnerManagementActivity : AppCompatActivity() {
     private lateinit var emptyText: TextView
     private lateinit var firestore: FirebaseFirestore
 
+    override fun onResume() {
+        super.onResume()
+        AdminSecurityGuard.requireUnlocked(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_partner_management)
