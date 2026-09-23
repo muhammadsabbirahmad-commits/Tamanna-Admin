@@ -2,18 +2,20 @@ package com.tamanna.admin
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import android.content.Intent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 
-class DashboardActivity : AppCompatActivity() {\n    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->\n        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, {\n            refreshEnterpriseConnection()\n        }, { message -> enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase Connection Failed\\n$message" })\n    }
+class DashboardActivity : AppCompatActivity() {
+    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { refreshEnterpriseConnection() }, { message -> enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase Connection Failed\\n$message" })
+    }
     private lateinit var partnerCount: TextView
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
