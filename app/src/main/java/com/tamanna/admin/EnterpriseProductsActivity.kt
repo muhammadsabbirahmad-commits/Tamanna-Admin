@@ -13,6 +13,7 @@ class EnterpriseProductsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!AdminSecurityGuard.requireUnlocked(this)) return
         setContentView(R.layout.activity_enterprise_products)
         status = findViewById(R.id.tvProductStatus)
         list = findViewById(R.id.lvEnterpriseProducts)
