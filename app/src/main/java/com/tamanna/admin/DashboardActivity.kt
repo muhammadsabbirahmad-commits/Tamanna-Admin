@@ -7,6 +7,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 
@@ -19,6 +20,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var enterpriseDataStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,11 +59,20 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun verifyAdminSession() {
-        val user = firebaseAuth.currentUser
-        if (user == null) {
-            forceReauthentication("Admin Gmail session পাওয়া যায়নি।")
-            return
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            val user = auth.currentUser
+            if (user == null) {
+                openAdminGmailSetup()
+            } else {
+                verifyAdminUser(user)
+            }
         }
+        authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
+        authStateListener = listener
+        firebaseAuth.addAuthStateListener(listener)
+    }
+
+    private fun verifyAdminUser(user: FirebaseUser) {
         firestore.collection("admin_registry").document("primary").get(Source.SERVER)
             .addOnSuccessListener { doc ->
                 val serverUid = doc.getString("uid").orEmpty()
@@ -80,6 +91,11 @@ class DashboardActivity : AppCompatActivity() {
             }
     }
 
+    private fun openAdminGmailSetup() {
+        Toast.makeText(this, "Master PIN সঠিক হয়েছে। এখন Admin Gmail একবার সংযুক্ত করুন।", Toast.LENGTH_LONG).show()
+        startActivity(Intent(this, AdminSettingsActivity::class.java))
+    }
+
     private fun forceReauthentication(message: String?) {
         firebaseAuth.signOut()
         getSharedPreferences("admin_identity", MODE_PRIVATE).edit()
@@ -92,6 +108,12 @@ class DashboardActivity : AppCompatActivity() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
+    }
+
+    override fun onDestroy() {
+        authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
+        authStateListener = null
+        super.onDestroy()
     }
 
     private fun refreshEnterpriseConnection() {
