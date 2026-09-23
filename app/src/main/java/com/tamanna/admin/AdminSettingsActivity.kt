@@ -28,6 +28,7 @@ class AdminSettingsActivity : AppCompatActivity() {
     private lateinit var tvEmail: TextView
     private lateinit var tvStatus: TextView
     private lateinit var etBusinessId: EditText
+    private lateinit var etEnterpriseLicenseCode: EditText
     private lateinit var etBusinessName: EditText
     private lateinit var tvBusinessContextStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
@@ -168,6 +169,7 @@ class AdminSettingsActivity : AppCompatActivity() {
         tvEmail = findViewById(R.id.tvAdminEmail)
         tvStatus = findViewById(R.id.tvAdminStatus)
         etBusinessId = findViewById(R.id.etBusinessId)
+        etEnterpriseLicenseCode = findViewById(R.id.etEnterpriseLicenseCode)
         etBusinessName = findViewById(R.id.etBusinessName)
         tvBusinessContextStatus = findViewById(R.id.tvBusinessContextStatus)
 
@@ -179,6 +181,8 @@ class AdminSettingsActivity : AppCompatActivity() {
             connectAdminGmail()
         }
 
+
+        findViewById<Button>(R.id.btnResolveBusinessId).setOnClickListener { resolveEnterpriseBusinessId() }
 
         findViewById<Button>(R.id.btnSaveBusinessContext).setOnClickListener {
             val saved = AdminBusinessContext.save(
@@ -219,6 +223,31 @@ class AdminSettingsActivity : AppCompatActivity() {
         refreshAdminIdentity()
     }
 
+
+    private fun resolveEnterpriseBusinessId() {
+        val code = etEnterpriseLicenseCode.text.toString().trim().uppercase()
+        val user = firebaseAuth.currentUser
+        if (code.isBlank()) { Toast.makeText(this, "Enterprise License Code দিন।", Toast.LENGTH_LONG).show(); return }
+        if (user == null) { Toast.makeText(this, "আগে Admin Gmail Connect করুন।", Toast.LENGTH_LONG).show(); return }
+        tvBusinessContextStatus.text = "Enterprise License থেকে Business ID যাচাই হচ্ছে..."
+        EnterpriseFirebaseAuth.resolveBusinessFromLicense(this, code, user.email.orEmpty())
+            .addOnSuccessListener { result ->
+                if (result != null) {
+                    val name = result.businessName.ifBlank { AdminBusinessContext.DEFAULT_NAME }
+                    AdminBusinessContext.save(this, result.businessId, name)
+                    etBusinessId.setText(result.businessId)
+                    etBusinessName.setText(name)
+                    tvBusinessContextStatus.text = "Business Context: " + result.businessId + "\n" + name
+                    Toast.makeText(this, "Enterprise Business ID সফলভাবে শনাক্ত হয়েছে।", Toast.LENGTH_LONG).show()
+                } else {
+                    tvBusinessContextStatus.text = "Enterprise Business ID শনাক্ত করা যায়নি।"
+                    Toast.makeText(this, "License Code বা Admin Gmail যাচাই করা যায়নি।", Toast.LENGTH_LONG).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Business ID যাচাই ব্যর্থ: " + (e.message ?: "আবার চেষ্টা করুন।"), Toast.LENGTH_LONG).show()
+            }
+    }
 
     private fun loadBusinessContext() {
         val id = AdminBusinessContext.getBusinessId(this)
