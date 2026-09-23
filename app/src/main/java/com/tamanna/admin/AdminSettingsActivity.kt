@@ -63,19 +63,41 @@ class AdminSettingsActivity : AppCompatActivity() {
                     authorizeAdminOnServer(uid, verifiedEmail)
                         .addOnSuccessListener { isAdmin ->
                             if (isAdmin) {
-                                getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                                    .putBoolean(FIREBASE_AUTHENTICATED, true)
-                                    .putString(ADMIN_EMAIL, verifiedEmail)
-                                    .putBoolean(ADMIN_CONNECTED, true)
-                                    .apply()
-
-                                refreshAdminIdentity()
-
-                                Toast.makeText(
+                                EnterpriseFirebaseAuth.authorizeAdmin(
                                     this,
-                                    "Admin Gmail ও Firestore Server Authorization সফল হয়েছে।",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                    idToken,
+                                    verifiedEmail
+                                )
+                                    .addOnSuccessListener { enterpriseAdmin ->
+                                        if (enterpriseAdmin) {
+                                            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                                .putBoolean(FIREBASE_AUTHENTICATED, true)
+                                                .putString(ADMIN_EMAIL, verifiedEmail)
+                                                .putBoolean(ADMIN_CONNECTED, true)
+                                                .apply()
+
+                                            refreshAdminIdentity()
+
+                                            Toast.makeText(
+                                                this,
+                                                "Admin Gmail, Admin Server এবং Tamanna Enterprise Authorization সফল হয়েছে।",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        } else {
+                                            Toast.makeText(
+                                                this,
+                                                "Tamanna Enterprise Firebase Authorization ব্যর্থ হয়েছে। Enterprise project-এর Google Sign-In/Rules পরীক্ষা করুন।",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            this,
+                                            "Enterprise Authorization ব্যর্থ: ${e.message ?: "আবার চেষ্টা করুন।"}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
                             } else {
                                 firebaseAuth.signOut()
                                 getSharedPreferences(PREFS, MODE_PRIVATE).edit()
