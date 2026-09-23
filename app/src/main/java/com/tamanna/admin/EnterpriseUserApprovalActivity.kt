@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
-class EnterpriseUserApprovalActivity : AppCompatActivity() {
+class EnterpriseUserApprovalActivity : AppCompatActivity() {\n    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->\n        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { load() }, { message -> Toast.makeText(this, message, Toast.LENGTH_LONG).show() })\n    }
     private lateinit var list: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +29,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
         list.removeAllViews()
         addText("Enterprise User Approval", 22, true)
         addText("Gmail request গ্রহণ করে মেয়াদ নির্ধারণ করুন।", 14, false)
-        EnterpriseAccessManager.loadRequests(this, { requests ->
+        EnterpriseAccessManager.loadRequests(this, enterpriseGoogleLauncher, { requests ->
             runOnUiThread {
                 list.removeAllViews(); addText("Enterprise User Approval", 22, true)
                 if (requests.isEmpty()) { addText("কোনো access request পাওয়া যায়নি।", 16, false); return@runOnUiThread }
@@ -71,7 +71,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
                     val now=System.currentTimeMillis()
                     val expiry=if(duration.selectedItemPosition==8) customExpiry else now+durationMillis(duration.selectedItemPosition)
                     if(expiry<=now){Toast.makeText(this,"সঠিক Custom expiry date দিন।",Toast.LENGTH_LONG).show();return@setOnClickListener}
-                    EnterpriseAccessManager.updateRequest(this,request,EnterpriseAccessManager.ACTIVE,now,expiry,request.notificationsEnabled,
+                    EnterpriseAccessManager.updateRequest(this,enterpriseGoogleLauncher,request,EnterpriseAccessManager.ACTIVE,now,expiry,request.notificationsEnabled,
                         {Toast.makeText(this,"User ACTIVE করা হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
                 }
                 reject.setOnClickListener {
