@@ -37,8 +37,8 @@ object EnterpriseFirebaseAuth {
             }
         } catch (e: Exception) {
             Tasks.forResult(false)
-        }
     }
+}
 
     private fun ensureAdminRegistry(
         context: Context,
