@@ -7,6 +7,7 @@
         android:allowBackup="false"
         android:supportsRtl="true">
         <activity android:name=".DashboardActivity" android:exported="false" />
+        <activity android:name=".EnterpriseUserApprovalActivity" android:exported="false" />
         <activity android:name=".PartnerManagementActivity" android:exported="false" />
         <activity android:name=".BusinessOverviewActivity" android:exported="false" />
         <activity android:name=".FinanceProfitActivity" android:exported="false" />
@@ -20,6 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-    <activity android:name=".AdminAuditActivity" android:exported="false" />
+        <activity android:name=".AdminAuditActivity" android:exported="false" />
     </application>
 </manifest>
