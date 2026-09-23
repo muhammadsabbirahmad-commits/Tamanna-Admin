@@ -75,21 +75,34 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun refreshPartnerSummary() {
-        val stored = getSharedPreferences("partner_management", MODE_PRIVATE)
-            .getStringSet("partners", emptySet()) ?: emptySet()
-        var pending = 0
-        var approved = 0
-        var suspended = 0
-        stored.forEach { entry ->
-            when (entry.substringBefore("|")) {
-                "PENDING" -> pending++
-                "APPROVED" -> approved++
-                "SUSPENDED" -> suspended++
+        firestore.collection("admin_data").document("partners").collection("items")
+            .get(Source.SERVER)
+            .addOnSuccessListener { snapshot ->
+                var pending = 0
+                var approved = 0
+                var suspended = 0
+                snapshot.documents.forEach { doc ->
+                    when (doc.getString("status").orEmpty()) {
+                        "PENDING" -> pending++
+                        "APPROVED" -> approved++
+                        "SUSPENDED" -> suspended++
+                    }
+                }
+                partnerCount.text = "Partners\\n" + snapshot.size()
+                pendingCount.text = "Pending\\n" + pending
+                approvedCount.text = "Approved\\n" + approved
+                suspendedCount.text = "Suspended\\n" + suspended
             }
-        }
-        partnerCount.text = "Partners\n" + stored.size
-        pendingCount.text = "Pending\n" + pending
-        approvedCount.text = "Approved\n" + approved
-        suspendedCount.text = "Suspended\n" + suspended
+            .addOnFailureListener { error ->
+                Toast.makeText(
+                    this,
+                    "Server থেকে Partner summary আনা যায়নি: " + (error.message ?: "Unknown error"),
+                    Toast.LENGTH_LONG
+                ).show()
+                partnerCount.text = "Partners\\n—"
+                pendingCount.text = "Pending\\n—"
+                approvedCount.text = "Approved\\n—"
+                suspendedCount.text = "Suspended\\n—"
+            }
     }
 }
