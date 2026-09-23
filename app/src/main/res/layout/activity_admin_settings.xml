@@ -72,6 +72,20 @@
             android:paddingBottom="8dp"/>
 
         <EditText
+            android:id="@+id/etEnterpriseLicenseCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enterprise License Code"
+            android:singleLine="true"
+            android:inputType="textCapCharacters"/>
+
+        <Button
+            android:id="@+id/btnResolveBusinessId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Resolve Enterprise Business ID"/>
+
+        <EditText
             android:id="@+id/etBusinessId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
