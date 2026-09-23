@@ -23,6 +23,7 @@ class PartnerManagementActivity : AppCompatActivity() {
     private lateinit var emptyText: TextView
     private lateinit var enterpriseStatus: TextView
     private lateinit var enterpriseAdapter: ArrayAdapter<String>
+    private lateinit var enterpriseMembershipStatus: TextView
     private lateinit var firestore: FirebaseFirestore
 
     override fun onResume() {
@@ -36,6 +37,7 @@ class PartnerManagementActivity : AppCompatActivity() {
         firestore = FirebaseFirestore.getInstance()
         emptyText = findViewById(R.id.tvEmpty)
         enterpriseStatus = findViewById(R.id.tvEnterprisePartnerStatus)
+        enterpriseMembershipStatus = findViewById(R.id.tvEnterpriseMembershipStatus)
         val list = findViewById<ListView>(R.id.lvPartners)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         list.adapter = adapter
@@ -43,7 +45,7 @@ class PartnerManagementActivity : AppCompatActivity() {
         val enterpriseList = findViewById<ListView>(R.id.lvEnterprisePartners)
         enterpriseAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         enterpriseList.adapter = enterpriseAdapter
-        findViewById<Button>(R.id.btnRefreshEnterprisePartners).setOnClickListener { loadEnterprisePartners() }
+        findViewById<Button>(R.id.btnRefreshEnterprisePartners).setOnClickListener { loadEnterprisePartners(); loadEnterpriseMembership() }
         list.setOnItemClickListener { _, _, position, _ -> showPartnerActions(position) }
         loadPartners()
         loadEnterprisePartners()
