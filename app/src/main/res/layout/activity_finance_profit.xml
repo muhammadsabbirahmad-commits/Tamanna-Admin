@@ -32,7 +32,7 @@
             android:layout_marginTop="22dp"
             android:background="#FFFFFF"
             android:gravity="center"
-            android:text="Total Sales&#10;৳ 0"
+            android:id="@+id/tvFinanceSales" android:text="Total Sales&#10;Server data summary"
             android:textSize="19sp"
             android:textStyle="bold" />
 
@@ -42,7 +42,7 @@
             android:layout_marginTop="12dp"
             android:background="#FFFFFF"
             android:gravity="center"
-            android:text="Total Purchase&#10;৳ 0"
+            android:id="@+id/tvFinancePurchase" android:text="Total Purchase&#10;Server data summary"
             android:textSize="19sp"
             android:textStyle="bold" />
 
@@ -52,7 +52,7 @@
             android:layout_marginTop="12dp"
             android:background="#FFFFFF"
             android:gravity="center"
-            android:text="Gross Profit&#10;৳ 0"
+            android:id="@+id/tvFinanceGrossProfit" android:text="Gross Profit&#10;Server data summary"
             android:textColor="#146B4A"
             android:textSize="19sp"
             android:textStyle="bold" />
@@ -63,7 +63,7 @@
             android:layout_marginTop="12dp"
             android:background="#FFFFFF"
             android:gravity="center"
-            android:text="Business Expenses&#10;৳ 0"
+            android:id="@+id/tvFinanceExpenses" android:text="Business Expenses&#10;৳ 0"
             android:textSize="19sp"
             android:textStyle="bold" />
 
@@ -73,8 +73,30 @@
             android:layout_marginTop="12dp"
             android:background="#FFFFFF"
             android:gravity="center"
-            android:text="Net Profit&#10;৳ 0"
+            android:id="@+id/tvFinanceWithdrawals" android:text="Partner Withdrawals&#10;৳ 0"
             android:textColor="#146B4A"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvFinanceDamage"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Damage Loss&#10;৳ 0"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvFinancePartners"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:text="Partners&#10;0"
             android:textSize="19sp"
             android:textStyle="bold" />
 
