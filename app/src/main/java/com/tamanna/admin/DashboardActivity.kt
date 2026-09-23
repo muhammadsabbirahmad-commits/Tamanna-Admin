@@ -5,13 +5,15 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 
-class DashboardActivity : AppCompatActivity() {
+class DashboardActivity : AppCompatActivity() {\n    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->\n        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, {\n            refreshEnterpriseConnection()\n        }, { message -> enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase Connection Failed\\n$message" })\n    }
     private lateinit var partnerCount: TextView
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
@@ -125,7 +127,7 @@ class DashboardActivity : AppCompatActivity() {
     private fun refreshEnterpriseConnection() {
         enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase সংযোগ যাচাই হচ্ছে..."
 
-        EnterpriseAccessManager.loadRequests(this, { requests ->
+        EnterpriseAccessManager.loadRequests(this, enterpriseGoogleLauncher, { requests ->
             runOnUiThread {
                 val pending = requests.count { it.status == EnterpriseAccessManager.PENDING }
                 val active = requests.count { it.status == EnterpriseAccessManager.ACTIVE }
