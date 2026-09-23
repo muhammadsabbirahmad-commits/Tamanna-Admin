@@ -13,7 +13,6 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 
 class AdminSettingsActivity : AppCompatActivity() {
@@ -45,68 +44,63 @@ class AdminSettingsActivity : AppCompatActivity() {
             }
 
             val credential = GoogleAuthProvider.getCredential(idToken, null)
+
             firebaseAuth.signInWithCredential(credential)
                 .addOnSuccessListener { authResult ->
                     val verifiedEmail = authResult.user?.email?.trim().orEmpty()
-                    if (verifiedEmail.isBlank()) {
-                        Toast.makeText(this, "Firebase-এ Google account যাচাই করা যায়নি।", Toast.LENGTH_LONG).show()
-                        return@addOnSuccessListener
-                    }
-
                     val uid = authResult.user?.uid.orEmpty()
-                    if (uid.isBlank()) {
-                        Toast.makeText(this, "Firebase UID পাওয়া যায়নি।", Toast.LENGTH_LONG).show()
+
+                    if (verifiedEmail.isBlank() || uid.isBlank()) {
+                        firebaseAuth.signOut()
+                        Toast.makeText(this, "Firebase account verification ব্যর্থ হয়েছে।", Toast.LENGTH_LONG).show()
                         return@addOnSuccessListener
                     }
 
-                    getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                        .putBoolean(FIREBASE_AUTHENTICATED, true)
-                        .apply()
-
-                    ensureFirestoreOnline {
-                        firestore.collection("admin_registry").document("primary").get(Source.SERVER)
-                            .addOnSuccessListener { doc ->
-                            val existingUid = doc.getString("uid").orEmpty()
-
-                            if (existingUid.isBlank()) {
-                                val adminData = hashMapOf(
-                                    "uid" to uid,
-                                    "email" to verifiedEmail,
-                                    "role" to "admin"
-                                )
-
-                                firestore.collection("admin_registry").document("primary")
-                                    .set(adminData, SetOptions.merge())
-                                    .addOnSuccessListener {
-                                        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                                            .putString(ADMIN_EMAIL, verifiedEmail)
-                                            .putBoolean(ADMIN_CONNECTED, true)
-                                            .apply()
-                                        refreshAdminIdentity()
-                                        Toast.makeText(this, "Admin Gmail ও Server Admin ID স্থায়ীভাবে সংযুক্ত হয়েছে।", Toast.LENGTH_LONG).show()
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Toast.makeText(this, "Server Admin সংরক্ষণ ব্যর্থ: ${e.message ?: "Firestore Rules পরীক্ষা করুন।"}", Toast.LENGTH_LONG).show()
-                                    }
-                            } else if (existingUid == uid) {
+                    authorizeAdminOnServer(uid, verifiedEmail)
+                        .addOnSuccessListener { isAdmin ->
+                            if (isAdmin) {
                                 getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                    .putBoolean(FIREBASE_AUTHENTICATED, true)
                                     .putString(ADMIN_EMAIL, verifiedEmail)
                                     .putBoolean(ADMIN_CONNECTED, true)
                                     .apply()
+
                                 refreshAdminIdentity()
-                                Toast.makeText(this, "Server Admin যাচাই সফল হয়েছে।", Toast.LENGTH_SHORT).show()
+
+                                Toast.makeText(
+                                    this,
+                                    "Admin Gmail ও Firestore Server Authorization সফল হয়েছে।",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             } else {
                                 firebaseAuth.signOut()
                                 getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                                     .putBoolean(FIREBASE_AUTHENTICATED, false)
+                                    .remove(ADMIN_EMAIL)
+                                    .putBoolean(ADMIN_CONNECTED, false)
                                     .apply()
-                                refreshAdminIdentity()
-                                Toast.makeText(this, "এই Gmail Admin নয়। বর্তমান Server Admin পরিবর্তন করা যাবে না।", Toast.LENGTH_LONG).show()
+
+                                tvEmail.text = "Admin Gmail: Not connected"
+                                tvStatus.text = "Admin Status: NOT CONNECTED"
+
+                                Toast.makeText(
+                                    this,
+                                    "এই Gmail Admin নয়। Server-এর স্থায়ী Admin Gmail পরিবর্তন করা যাবে না।",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(this, "Server Admin যাচাই ব্যর্থ: ${e.message ?: "Firestore Rules/সংযোগ পরীক্ষা করুন।"}", Toast.LENGTH_LONG).show()
-                            }
+                        .addOnFailureListener { e ->
+                            firebaseAuth.signOut()
+                            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                .putBoolean(FIREBASE_AUTHENTICATED, false)
+                                .apply()
+
+                            Toast.makeText(
+                                this,
+                                "Firestore Server Authorization ব্যর্থ: ${e.message ?: "Rules/Internet পরীক্ষা করুন।"}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                 }
                 .addOnFailureListener { e ->
@@ -151,9 +145,13 @@ class AdminSettingsActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnAdminLogout).setOnClickListener {
             firebaseAuth.signOut()
+
             getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                 .putBoolean(FIREBASE_AUTHENTICATED, false)
+                .remove(ADMIN_EMAIL)
+                .putBoolean(ADMIN_CONNECTED, false)
                 .apply()
+
             getSharedPreferences("admin_security", MODE_PRIVATE)
                 .edit()
                 .putBoolean("admin_unlocked", false)
@@ -172,27 +170,27 @@ class AdminSettingsActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
         val existing = prefs.getString(ADMIN_EMAIL, null)
 
+        if (!existing.isNullOrBlank()) {
+            Toast.makeText(
+                this,
+                "Admin Gmail ইতিমধ্যে সংযুক্ত। Server থেকে স্থায়ী Admin যাচাই করা হচ্ছে।",
+                Toast.LENGTH_SHORT
+            ).show()
+            refreshAdminIdentity()
+            return
+        }
+
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
 
         val client = GoogleSignIn.getClient(this, options)
-
-        if (!existing.isNullOrBlank()) {
-            Toast.makeText(
-                this,
-                "Admin Gmail ইতিমধ্যে সংযুক্ত। অন্য Gmail দিয়ে পরিবর্তন করা যাবে না।",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
         googleLauncher.launch(client.signInIntent)
     }
 
     private fun refreshAdminIdentity() {
         val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-        val localEmail = prefs.getString(ADMIN_EMAIL, null)
         val user = firebaseAuth.currentUser
 
         if (user == null) {
@@ -203,45 +201,81 @@ class AdminSettingsActivity : AppCompatActivity() {
 
         tvStatus.text = "Admin Status: CHECKING SERVER..."
 
-        ensureFirestoreOnline {
-            firestore.collection("admin_registry").document("primary").get(Source.SERVER)
-                .addOnSuccessListener { doc ->
-                    val serverUid = doc.getString("uid").orEmpty()
-                    val serverEmail = doc.getString("email").orEmpty()
+        firestore.collection("admin_registry").document("primary")
+            .get(Source.SERVER)
+            .addOnSuccessListener { doc ->
+                val serverUid = doc.getString("uid").orEmpty()
+                val serverEmail = doc.getString("email").orEmpty()
+                val serverRole = doc.getString("role").orEmpty()
 
-                    if (serverUid == user.uid && serverEmail.isNotBlank()) {
-                        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                            .putString(ADMIN_EMAIL, serverEmail)
-                            .putBoolean(ADMIN_CONNECTED, true)
-                            .apply()
-                        tvEmail.text = "Admin Gmail: $serverEmail"
-                        tvStatus.text = "Admin Status: ACTIVE"
-                    } else {
-                        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                            .remove(ADMIN_EMAIL)
-                            .putBoolean(ADMIN_CONNECTED, false)
-                            .apply()
-                        tvEmail.text = "Admin Gmail: Not connected"
-                        tvStatus.text = "Admin Status: NOT CONNECTED"
-                    }
+                if (doc.exists() &&
+                    serverUid == user.uid &&
+                    serverEmail.isNotBlank() &&
+                    serverRole == "admin"
+                ) {
+                    prefs.edit()
+                        .putBoolean(FIREBASE_AUTHENTICATED, true)
+                        .putString(ADMIN_EMAIL, serverEmail)
+                        .putBoolean(ADMIN_CONNECTED, true)
+                        .apply()
+
+                    tvEmail.text = "Admin Gmail: $serverEmail"
+                    tvStatus.text = "Admin Status: ACTIVE"
+                } else {
+                    firebaseAuth.signOut()
+
+                    prefs.edit()
+                        .putBoolean(FIREBASE_AUTHENTICATED, false)
+                        .remove(ADMIN_EMAIL)
+                        .putBoolean(ADMIN_CONNECTED, false)
+                        .apply()
+
+                    tvEmail.text = "Admin Gmail: Not connected"
+                    tvStatus.text = "Admin Status: NOT CONNECTED"
                 }
-                .addOnFailureListener { e ->
-                    tvEmail.text = if (!localEmail.isNullOrBlank()) {
-                        "Admin Gmail: $localEmail"
-                    } else {
-                        "Admin Gmail: Not connected"
-                    }
-                    tvStatus.text = "Admin Status: SERVER CHECK FAILED"
-                    Toast.makeText(
-                        this,
-                        "Server Admin যাচাই করা যায়নি: ${e.message ?: "Internet/Firestore connection পরীক্ষা করুন।"}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-        }
+            }
+            .addOnFailureListener { e ->
+                tvEmail.text = "Admin Gmail: Not connected"
+                tvStatus.text = "Admin Status: SERVER CHECK FAILED"
+
+                Toast.makeText(
+                    this,
+                    "Server Admin যাচাই করা যায়নি: ${e.message ?: "Internet/Firestore Rules পরীক্ষা করুন।"}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
     }
 
-    private fun ensureFirestoreOnline(action: () -> Unit) {
-        action()
+    private fun authorizeAdminOnServer(
+        uid: String,
+        email: String
+    ): com.google.android.gms.tasks.Task<Boolean> {
+        val ref = firestore.collection("admin_registry").document("primary")
+
+        return ref.get(Source.SERVER).continueWithTask { getTask ->
+            if (getTask.isSuccessful) {
+                val doc = getTask.result
+
+                if (doc.exists()) {
+                    val serverUid = doc.getString("uid").orEmpty()
+                    val serverRole = doc.getString("role").orEmpty()
+
+                    return@continueWithTask com.google.android.gms.tasks.Tasks.forResult(
+                        serverUid == uid && serverRole == "admin"
+                    )
+                }
+            }
+
+            // No visible primary Admin exists: first authenticated account attempts to claim it.
+            val adminData = hashMapOf(
+                "uid" to uid,
+                "email" to email,
+                "role" to "admin"
+            )
+
+            ref.create(adminData).continueWithTask { createTask ->
+                com.google.android.gms.tasks.Tasks.forResult(createTask.isSuccessful)
+            }
+        }
     }
 }
