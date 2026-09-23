@@ -38,6 +38,7 @@ class DashboardActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnBusiness).setOnClickListener { startActivity(Intent(this, BusinessOverviewActivity::class.java)) }
         findViewById<Button>(R.id.btnFinance).setOnClickListener { startActivity(Intent(this, FinanceProfitActivity::class.java)) }
         findViewById<Button>(R.id.btnSettings).setOnClickListener { startActivity(Intent(this, AdminSettingsActivity::class.java)) }
+        findViewById<Button>(R.id.btnAudit).setOnClickListener { startActivity(Intent(this, AdminAuditActivity::class.java)) }
     }
 
     override fun onResume() {
