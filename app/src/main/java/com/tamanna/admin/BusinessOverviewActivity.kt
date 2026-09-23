@@ -21,7 +21,18 @@ class BusinessOverviewActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvOverviewStatus)
 
         findViewById<Button>(R.id.btnRefreshOverview).setOnClickListener {
-            tvStatus.text = "Overview refreshed"
+            loadOverview()
+        }
+
+        loadOverview()
+    }
+
+    private fun loadOverview() {
+        tvStatus.text = "Tamanna Enterprise server যাচাই হচ্ছে..."
+        EnterpriseBusinessDataReader.loadOverview(this) { _, message ->
+            runOnUiThread {
+                tvStatus.text = message
+            }
         }
     }
 }
