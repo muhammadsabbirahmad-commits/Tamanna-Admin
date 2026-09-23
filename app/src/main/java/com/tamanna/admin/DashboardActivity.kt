@@ -15,6 +15,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
     private lateinit var suspendedCount: TextView
+    private lateinit var enterpriseConnectionStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
 
@@ -27,6 +28,7 @@ class DashboardActivity : AppCompatActivity() {
         pendingCount = findViewById(R.id.tvPendingCount)
         approvedCount = findViewById(R.id.tvApprovedCount)
         suspendedCount = findViewById(R.id.tvSuspendedCount)
+        enterpriseConnectionStatus = findViewById(R.id.tvEnterpriseConnectionStatus)
         findViewById<Button>(R.id.btnPartners).setOnClickListener { startActivity(Intent(this, PartnerManagementActivity::class.java)) }
         findViewById<Button>(R.id.btnBusiness).setOnClickListener { startActivity(Intent(this, BusinessOverviewActivity::class.java)) }
         findViewById<Button>(R.id.btnFinance).setOnClickListener { startActivity(Intent(this, FinanceProfitActivity::class.java)) }
@@ -59,6 +61,7 @@ class DashboardActivity : AppCompatActivity() {
                 val serverRole = doc.getString("role").orEmpty()
                 if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
                     refreshPartnerSummary()
+                    refreshEnterpriseConnection()
                 } else {
                     forceReauthentication("এই Firebase account আর Server Admin হিসেবে অনুমোদিত নয়।")
                 }
@@ -81,6 +84,21 @@ class DashboardActivity : AppCompatActivity() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
+    }
+
+    private fun refreshEnterpriseConnection() {
+        val businessId = AdminBusinessContext.getBusinessId(this)
+        val businessName = AdminBusinessContext.getBusinessName(this)
+        enterpriseConnectionStatus.text = "Tamanna Enterprise: যাচাই হচ্ছে..."
+        if (businessId == AdminBusinessContext.DEFAULT_ID) {
+            enterpriseConnectionStatus.text = "Tamanna Enterprise: Business ID সেট করা হয়নি"
+            return
+        }
+        EnterpriseMembershipReader.load(this) { _, membership, message ->
+            runOnUiThread {
+                enterpriseConnectionStatus.text = "Business: $businessName\\nID: $businessId\\n$message"
+            }
+        }
     }
 
     private fun refreshPartnerSummary() {
