@@ -159,6 +159,7 @@ class AdminSettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!AdminSecurityGuard.requireUnlocked(this)) return
         setContentView(R.layout.activity_admin_settings)
 
         tvEmail = findViewById(R.id.tvAdminEmail)
@@ -183,6 +184,7 @@ class AdminSettingsActivity : AppCompatActivity() {
                 etBusinessName.text.toString()
             )
             if (saved) {
+                AdminAuditLogger.log(this, "BUSINESS_CONTEXT_UPDATE", etBusinessId.text.toString().trim(), etBusinessName.text.toString().trim())
                 loadBusinessContext()
                 Toast.makeText(this, "Business Context সংরক্ষণ হয়েছে।", Toast.LENGTH_SHORT).show()
             } else {
@@ -323,16 +325,7 @@ class AdminSettingsActivity : AppCompatActivity() {
                 }
             }
 
-            // No visible primary Admin exists: first authenticated account attempts to claim it.
-            val adminData = hashMapOf(
-                "uid" to uid,
-                "email" to email,
-                "role" to "admin"
-            )
-
-            ref.set(adminData).continueWithTask { setTask ->
-                com.google.android.gms.tasks.Tasks.forResult(setTask.isSuccessful)
-            }
+            return@continueWithTask com.google.android.gms.tasks.Tasks.forResult(false)
         }
     }
 }
