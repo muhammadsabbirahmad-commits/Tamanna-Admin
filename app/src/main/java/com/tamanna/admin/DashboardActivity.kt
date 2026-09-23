@@ -92,8 +92,13 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun openAdminGmailSetup() {
-        Toast.makeText(this, "Master PIN সঠিক হয়েছে। এখন Admin Gmail একবার সংযুক্ত করুন।", Toast.LENGTH_LONG).show()
-        startActivity(Intent(this, AdminSettingsActivity::class.java))
+        enterpriseConnectionStatus.text = "Admin Gmail: Not connected\\nAdmin Settings থেকে Gmail সংযুক্ত করুন।"
+        enterpriseDataStatus.text = "Enterprise Cloud Data: Admin Gmail সংযুক্ত হওয়ার পর যাচাই হবে।"
+        Toast.makeText(
+            this,
+            "Master PIN সঠিক হয়েছে। Dashboard খোলা আছে। Admin Settings থেকে Gmail সংযুক্ত করুন।",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     private fun forceReauthentication(message: String?) {
