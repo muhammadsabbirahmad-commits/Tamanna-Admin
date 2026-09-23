@@ -145,6 +145,13 @@
             android:text="Enterprise Sales &amp; Purchase" />
 
         <Button
+            android:id="@+id/btnReports"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Date Range Reports" />
+
+        <Button
             android:id="@+id/btnBusiness"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
