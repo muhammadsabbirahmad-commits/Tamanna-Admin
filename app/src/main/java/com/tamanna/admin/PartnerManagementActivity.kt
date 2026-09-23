@@ -2,6 +2,7 @@ package com.tamanna.admin
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.text.InputType
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -9,148 +10,142 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
+
+data class AdminPartner(val id: String, val status: String, val email: String, val name: String)
 
 class PartnerManagementActivity : AppCompatActivity() {
-
-    private val partners = mutableListOf<String>()
+    private val partners = mutableListOf<AdminPartner>()
     private lateinit var adapter: ArrayAdapter<String>
     private lateinit var emptyText: TextView
-
-    private val prefs by lazy {
-        getSharedPreferences("partner_management", MODE_PRIVATE)
-    }
+    private lateinit var firestore: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_partner_management)
-
+        firestore = FirebaseFirestore.getInstance()
         emptyText = findViewById(R.id.tvEmpty)
         val list = findViewById<ListView>(R.id.lvPartners)
-
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, partners)
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         list.adapter = adapter
-
+        findViewById<Button>(R.id.btnAddPartner).setOnClickListener { showAddDialog() }
+        list.setOnItemClickListener { _, _, position, _ -> showPartnerActions(position) }
         loadPartners()
-
-        findViewById<Button>(R.id.btnAddPartner).setOnClickListener {
-            showAddDialog()
-        }
-
-        list.setOnItemClickListener { _, _, position, _ ->
-            showPartnerActions(position)
-        }
     }
+
+    private fun partnersRef() = firestore.collection("admin_data").document("root").collection("partners")
 
     private fun showAddDialog() {
         val container = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(40, 0, 40, 0)
         }
-
-        val nameInput = EditText(this).apply {
-            hint = "Partner name"
-        }
+        val nameInput = EditText(this).apply { hint = "Partner name" }
         val emailInput = EditText(this).apply {
             hint = "Gmail address"
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                    android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         }
-
         container.addView(nameInput)
         container.addView(emailInput)
 
         AlertDialog.Builder(this)
             .setTitle("New Partner Request")
-            .setMessage("Partner requestটি এখানে যোগ করুন। পরে তালিকা থেকে Approve/Reject করা যাবে।")
+            .setMessage("Partner requestটি Server Firestore-এ সংরক্ষণ হবে।")
             .setView(container)
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Add") { _, _ ->
                 val name = nameInput.text.toString().trim()
                 val email = emailInput.text.toString().trim()
-
                 if (name.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                     Toast.makeText(this, "সঠিক নাম ও Gmail address দিন।", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-
-                val duplicate = partners.any {
-                    it.substringAfter("|").substringBefore("|").equals(email, ignoreCase = true)
-                }
-                if (duplicate) {
+                if (partners.any { it.email.equals(email, ignoreCase = true) }) {
                     Toast.makeText(this, "এই Gmail ইতিমধ্যে তালিকায় আছে।", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-
-                partners.add("PENDING|"+email+"|"+name)
-                savePartners()
-                refreshList()
-                Toast.makeText(this, "Partner request যোগ হয়েছে।", Toast.LENGTH_SHORT).show()
-            }
-            .show()
+                val data = hashMapOf("status" to "PENDING", "email" to email, "name" to name)
+                val id = email.lowercase().replace(Regex("[^a-z0-9]"), "_")
+                partnersRef().document(id).set(data)
+                    .addOnSuccessListener {
+                        loadPartners()
+                        Toast.makeText(this, "Partner request Server-এ যোগ হয়েছে।", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener { error ->
+                        Toast.makeText(this, "Partner save ব্যর্থ: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
+                    }
+            }.show()
     }
 
     private fun showPartnerActions(position: Int) {
-        val raw = partners[position]
-        val parts = raw.split("|", limit = 3)
-        val status = parts.getOrNull(0) ?: "PENDING"
-        val email = parts.getOrNull(1) ?: ""
-        val name = parts.getOrNull(2) ?: email
-
-        val options = when (status) {
+        val p = partners[position]
+        val options = when (p.status) {
             "PENDING" -> arrayOf("Approve", "Reject / Remove")
             "APPROVED" -> arrayOf("Suspend", "Remove")
             "SUSPENDED" -> arrayOf("Activate", "Remove")
             else -> arrayOf("Remove")
         }
-
         AlertDialog.Builder(this)
-            .setTitle(name)
-            .setMessage(email + "\nStatus: " + status)
+            .setTitle(p.name)
+            .setMessage(p.email + "\nStatus: " + p.status)
             .setItems(options) { _, which ->
-                when (status) {
-                    "PENDING" -> if (which == 0) updateStatus(position, "APPROVED") else removePartner(position)
-                    "APPROVED" -> if (which == 0) updateStatus(position, "SUSPENDED") else removePartner(position)
-                    "SUSPENDED" -> if (which == 0) updateStatus(position, "APPROVED") else removePartner(position)
-                    else -> removePartner(position)
+                when (p.status) {
+                    "PENDING" -> if (which == 0) updateStatus(p, "APPROVED") else removePartner(p)
+                    "APPROVED" -> if (which == 0) updateStatus(p, "SUSPENDED") else removePartner(p)
+                    "SUSPENDED" -> if (which == 0) updateStatus(p, "APPROVED") else removePartner(p)
+                    else -> removePartner(p)
                 }
+            }.show()
+    }
+
+    private fun updateStatus(p: AdminPartner, status: String) {
+        partnersRef().document(p.id).update("status", status)
+            .addOnSuccessListener { loadPartners() }
+            .addOnFailureListener { error ->
+                Toast.makeText(this, "Status update ব্যর্থ: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
             }
-            .show()
     }
 
-    private fun updateStatus(position: Int, newStatus: String) {
-        val parts = partners[position].split("|", limit = 3)
-        partners[position] = newStatus + "|" +
-                parts.getOrElse(1) { "" } + "|" +
-                parts.getOrElse(2) { "" }
-        savePartners()
-        refreshList()
-    }
-
-    private fun removePartner(position: Int) {
+    private fun removePartner(p: AdminPartner) {
         AlertDialog.Builder(this)
             .setTitle("Remove partner?")
-            .setMessage("এই partner-কে তালিকা থেকে সরানো হবে।")
+            .setMessage("Server থেকে এই partner-কে সরানো হবে।")
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Remove") { _, _ ->
-                partners.removeAt(position)
-                savePartners()
-                refreshList()
-            }
-            .show()
-    }
-
-    private fun savePartners() {
-        prefs.edit().putStringSet("partners", partners.toSet()).apply()
+                partnersRef().document(p.id).delete()
+                    .addOnSuccessListener { loadPartners() }
+                    .addOnFailureListener { error ->
+                        Toast.makeText(this, "Remove ব্যর্থ: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
+                    }
+            }.show()
     }
 
     private fun loadPartners() {
-        partners.clear()
-        partners.addAll(prefs.getStringSet("partners", emptySet()) ?: emptySet())
-        refreshList()
+        partnersRef().get(Source.SERVER)
+            .addOnSuccessListener { snapshot ->
+                partners.clear()
+                snapshot.documents.forEach { doc ->
+                    partners.add(
+                        AdminPartner(
+                            id = doc.id,
+                            status = doc.getString("status").orEmpty(),
+                            email = doc.getString("email").orEmpty(),
+                            name = doc.getString("name").orEmpty()
+                        )
+                    )
+                }
+                refreshList()
+            }
+            .addOnFailureListener { error ->
+                Toast.makeText(this, "Server থেকে Partner list আনা যায়নি: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun refreshList() {
-        partners.sortBy { it.substringAfter("|").substringAfter("|").lowercase() }
+        partners.sortBy { it.name.lowercase() }
+        adapter.clear()
+        adapter.addAll(partners.map { it.name + "\n" + it.email + "\nStatus: " + it.status })
         adapter.notifyDataSetChanged()
         emptyText.visibility = if (partners.isEmpty()) TextView.VISIBLE else TextView.GONE
     }
