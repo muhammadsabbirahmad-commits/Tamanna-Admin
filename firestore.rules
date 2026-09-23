@@ -4,11 +4,14 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Permanent Admin identity.
-    // Only the UID stored in this document may read/update it.
-    // The first authenticated user may create it once.
+    // The first authenticated user may create this document once.
+    // Once it exists, only that UID may read or update it.
     match /admin_registry/primary {
       allow read: if request.auth != null
-                    && resource.data.uid == request.auth.uid;
+                    && (
+                      !exists(/databases/$(database)/documents/admin_registry/primary)
+                      || resource.data.uid == request.auth.uid
+                    );
 
       allow create: if request.auth != null
                     && !exists(/databases/$(database)/documents/admin_registry/primary)
