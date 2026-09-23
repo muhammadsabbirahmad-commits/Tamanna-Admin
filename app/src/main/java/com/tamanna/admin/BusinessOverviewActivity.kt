@@ -9,6 +9,11 @@ class BusinessOverviewActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
 
+    override fun onResume() {
+        super.onResume()
+        AdminSecurityGuard.requireUnlocked(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_business_overview)
