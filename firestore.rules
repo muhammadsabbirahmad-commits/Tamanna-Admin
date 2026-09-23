@@ -27,7 +27,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /admin_data/partners/{partnerId} {
+    match /admin_data/partners/items/{partnerId} {
       allow read, write: if isAdmin();
     }
 
