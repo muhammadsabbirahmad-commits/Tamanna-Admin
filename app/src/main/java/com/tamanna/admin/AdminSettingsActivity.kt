@@ -33,6 +33,7 @@ class AdminSettingsActivity : AppCompatActivity() {
     private lateinit var tvBusinessContextStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
+    private var lastGoogleIdToken: String = ""
 
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -48,6 +49,7 @@ class AdminSettingsActivity : AppCompatActivity() {
                 return@registerForActivityResult
             }
 
+            lastGoogleIdToken = idToken
             val credential = GoogleAuthProvider.getCredential(idToken, null)
 
             firebaseAuth.signInWithCredential(credential)
@@ -64,44 +66,19 @@ class AdminSettingsActivity : AppCompatActivity() {
                     authorizeAdminOnServer(uid, verifiedEmail)
                         .addOnSuccessListener { isAdmin ->
                             if (isAdmin) {
-                                EnterpriseFirebaseAuth.authorizeAdmin(
+                                getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                    .putBoolean(FIREBASE_AUTHENTICATED, true)
+                                    .putString(ADMIN_EMAIL, verifiedEmail)
+                                    .putBoolean(ADMIN_CONNECTED, true)
+                                    .apply()
+
+                                tvEmail.text = "Admin Gmail: $verifiedEmail"
+                                tvStatus.text = "Admin Status: ACTIVE"
+                                Toast.makeText(
                                     this,
-                                    idToken,
-                                    verifiedEmail
-                                )
-                                    .addOnSuccessListener { enterpriseAdmin ->
-                                        if (enterpriseAdmin) {
-                                            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                                                .putBoolean(FIREBASE_AUTHENTICATED, true)
-                                                .putString(ADMIN_EMAIL, verifiedEmail)
-                                                .putBoolean(ADMIN_CONNECTED, true)
-                                                .apply()
-
-                                            refreshAdminIdentity()
-
-                                            Toast.makeText(
-                                                this,
-                                                "Admin Gmail, Admin Server এবং Tamanna Enterprise Authorization সফল হয়েছে।",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-
-                                            startActivity(Intent(this, DashboardActivity::class.java))
-                                            finish()
-                                        } else {
-                                            Toast.makeText(
-                                                this,
-                                                "Tamanna Enterprise Firebase Authorization ব্যর্থ হয়েছে। Enterprise project-এর Google Sign-In/Rules পরীক্ষা করুন।",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Toast.makeText(
-                                            this,
-                                            "Enterprise Authorization ব্যর্থ: ${e.message ?: "আবার চেষ্টা করুন।"}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
+                                    "Admin Gmail সফলভাবে Connected হয়েছে। এখন Enterprise License Code দিয়ে Business ID Resolve করুন।",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             } else {
                                 firebaseAuth.signOut()
                                 getSharedPreferences(PREFS, MODE_PRIVATE).edit()
@@ -239,6 +216,23 @@ class AdminSettingsActivity : AppCompatActivity() {
                     etBusinessName.setText(name)
                     tvBusinessContextStatus.text = "Business Context: " + result.businessId + "\n" + name
                     Toast.makeText(this, "Enterprise Business ID সফলভাবে শনাক্ত হয়েছে।", Toast.LENGTH_LONG).show()
+
+                    val adminEmail = firebaseAuth.currentUser?.email.orEmpty()
+                    if (lastGoogleIdToken.isBlank() || adminEmail.isBlank()) {
+                        Toast.makeText(this, "Business ID সংরক্ষণ হয়েছে। Enterprise Authorization-এর জন্য Gmail session পুনরায় যাচাই করুন।", Toast.LENGTH_LONG).show()
+                    } else {
+                        EnterpriseFirebaseAuth.authorizeAdmin(this, lastGoogleIdToken, adminEmail)
+                            .addOnSuccessListener { authorized ->
+                                if (authorized) {
+                                    Toast.makeText(this, "Admin Gmail → Tamanna Enterprise Authorization সফল হয়েছে।", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(this, "Enterprise Authorization সফল হয়নি। Business members-এ Admin OWNER/approved status পরীক্ষা করতে হবে।", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this, "Enterprise Authorization ব্যর্থ হয়েছে।", Toast.LENGTH_LONG).show()
+                            }
+                    }
                 } else {
                     tvBusinessContextStatus.text = "Enterprise Business ID শনাক্ত করা যায়নি।"
                     Toast.makeText(this, "License Code বা Admin Gmail যাচাই করা যায়নি।", Toast.LENGTH_LONG).show()
