@@ -16,6 +16,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var approvedCount: TextView
     private lateinit var suspendedCount: TextView
     private lateinit var enterpriseConnectionStatus: TextView
+    private lateinit var enterpriseDataStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
 
@@ -29,6 +30,7 @@ class DashboardActivity : AppCompatActivity() {
         approvedCount = findViewById(R.id.tvApprovedCount)
         suspendedCount = findViewById(R.id.tvSuspendedCount)
         enterpriseConnectionStatus = findViewById(R.id.tvEnterpriseConnectionStatus)
+        enterpriseDataStatus = findViewById(R.id.tvEnterpriseDataStatus)
         findViewById<Button>(R.id.btnPartners).setOnClickListener { startActivity(Intent(this, PartnerManagementActivity::class.java)) }
         findViewById<Button>(R.id.btnBusiness).setOnClickListener { startActivity(Intent(this, BusinessOverviewActivity::class.java)) }
         findViewById<Button>(R.id.btnFinance).setOnClickListener { startActivity(Intent(this, FinanceProfitActivity::class.java)) }
@@ -62,6 +64,7 @@ class DashboardActivity : AppCompatActivity() {
                 if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
                     refreshPartnerSummary()
                     refreshEnterpriseConnection()
+                    refreshEnterpriseDataAccess()
                 } else {
                     forceReauthentication("এই Firebase account আর Server Admin হিসেবে অনুমোদিত নয়।")
                 }
@@ -97,6 +100,19 @@ class DashboardActivity : AppCompatActivity() {
         EnterpriseMembershipReader.load(this) { _, membership, message ->
             runOnUiThread {
                 enterpriseConnectionStatus.text = "Business: $businessName\\nID: $businessId\\n$message"
+            }
+        }
+    }
+
+    private fun refreshEnterpriseDataAccess() {
+        enterpriseDataStatus.text = "Enterprise Cloud Data: যাচাই হচ্ছে..."
+        EnterpriseBusinessDataReader.loadOverview(this) { success, message ->
+            runOnUiThread {
+                enterpriseDataStatus.text = if (success) {
+                    "Enterprise Cloud Data Access\n$message\nRead-only"
+                } else {
+                    "Enterprise Cloud Data Access\n$message"
+                }
             }
         }
     }
