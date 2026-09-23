@@ -34,6 +34,7 @@ object EnterprisePartnerFinanceReader {
  private fun countPartners(v:Any?):Int=array(v)?.length()?:0
  private fun sumField(v:Any?,f:String):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length())t+=a.optJSONObject(i)?.optDouble(f,0.0)?:0.0;return t}
  private fun sumSales(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("salePrice",0.0)*o.optDouble("quantity",0.0)};return t}
- private fun sumSalesCost(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}\n private fun sumPurchases(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}
+ private fun sumSalesCost(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}
+ private fun sumPurchases(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}
  private fun sumDamage(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("quantity",0.0)*o.optDouble("unitCost",0.0)};return t}
 }
