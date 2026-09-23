@@ -11,7 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Source\nimport java.util.Locale
+import com.google.firebase.firestore.Source
+import java.util.Locale
 
 data class AdminPartner(val id: String, val status: String, val email: String, val name: String)
 
@@ -45,6 +46,7 @@ class PartnerManagementActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnRefreshEnterprisePartners).setOnClickListener { loadEnterprisePartners() }
         list.setOnItemClickListener { _, _, position, _ -> showPartnerActions(position) }
         loadPartners()
+        loadEnterprisePartners()
     }
 
     private fun partnersRef() = firestore.collection("admin_data").document("partners").collection("items")
