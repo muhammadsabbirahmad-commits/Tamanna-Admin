@@ -28,15 +28,18 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (AdminSecurityGuard.isUnlocked(this)) load()
+        if (AdminSecurityGuard.isUnlocked(this) && !loadInProgress) load()
     }
 
     private fun load() {
+        if (loadInProgress) return
+        loadInProgress = true
         list.removeAllViews()
         addText("Enterprise User Approval", 22, true)
         addText("Gmail request গ্রহণ করে মেয়াদ নির্ধারণ করুন।", 14, false)
         EnterpriseAccessManager.loadRequests(this, enterpriseGoogleLauncher, { requests ->
             runOnUiThread {
+                loadInProgress = false
                 list.removeAllViews(); addText("Enterprise User Approval", 22, true)
                 if (requests.isEmpty()) { addText("কোনো access request পাওয়া যায়নি।", 16, false); return@runOnUiThread }
                 requests.forEach { renderRequest(it) }
