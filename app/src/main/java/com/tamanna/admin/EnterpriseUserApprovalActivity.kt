@@ -105,7 +105,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
         val options=arrayOf("3 days","5 days","7 days","15 days","1 month","3 months","6 months","1 year")
         AlertDialog.Builder(this).setTitle("Extend / Reactivate").setItems(options){_,which->
             val now=System.currentTimeMillis(); val expiry=maxOf(now,request.expiresAt)+durationMillis(which)
-            EnterpriseAccessManager.updateRequest(this,request,EnterpriseAccessManager.ACTIVE,now,expiry,request.notificationsEnabled,{Toast.makeText(this,"User ACTIVE ও Extend হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
+            EnterpriseAccessManager.updateRequest(this,enterpriseGoogleLauncher,request,EnterpriseAccessManager.ACTIVE,now,expiry,request.notificationsEnabled,{Toast.makeText(this,"User ACTIVE ও Extend হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
         }.show()
     }
     private fun durationMillis(p:Int):Long=when(p){0->3L*DAY;1->5L*DAY;2->7L*DAY;3->15L*DAY;4->30L*DAY;5->90L*DAY;6->180L*DAY;else->365L*DAY}
