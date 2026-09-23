@@ -2,7 +2,6 @@ package com.tamanna.admin
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -106,7 +105,7 @@ class DashboardActivity : AppCompatActivity() {
 
                 if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
                     refreshPartnerSummary()
-                    refreshEnterpriseConnection()
+                    enterpriseConnectionStatus.text = "Tamanna Enterprise: Authorization ready\\nEnterprise User Approval খুলে Admin authorization সম্পন্ন করুন।"
                 } else {
                     forceReauthentication("এই Firebase account আর Server Admin হিসেবে অনুমোদিত নয়।")
                 }
@@ -139,32 +138,6 @@ class DashboardActivity : AppCompatActivity() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
-    }
-
-    private fun refreshEnterpriseConnection() {
-        enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase সংযোগ যাচাই হচ্ছে..."
-
-        EnterpriseAccessManager.loadRequests(
-            this,
-            enterpriseGoogleLauncher,
-            { requests ->
-                if (isFinishing || isDestroyed) return@loadRequests
-
-                val pending = requests.count { it.status == EnterpriseAccessManager.PENDING }
-                val active = requests.count { it.status == EnterpriseAccessManager.ACTIVE }
-                val blocked = requests.count { it.status == EnterpriseAccessManager.BLOCKED }
-
-                enterpriseConnectionStatus.text =
-                    "Tamanna Enterprise: Firebase Connected\n" +
-                    "Access Requests: " + requests.size + "\n" +
-                    "Pending: " + pending + " | Active: " + active + " | Blocked: " + blocked
-            },
-            { message ->
-                if (isFinishing || isDestroyed) return@loadRequests
-                enterpriseConnectionStatus.text =
-                    "Tamanna Enterprise: Firebase Connection Failed\n" + message
-            }
-        )
     }
 
     private fun refreshPartnerSummary() {
