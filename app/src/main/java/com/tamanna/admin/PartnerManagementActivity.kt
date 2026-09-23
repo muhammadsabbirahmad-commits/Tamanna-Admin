@@ -87,6 +87,7 @@ class PartnerManagementActivity : AppCompatActivity() {
                 val id = email.lowercase().replace(Regex("[^a-z0-9]"), "_")
                 partnersRef().document(id).set(data)
                     .addOnSuccessListener {
+                        AdminAuditLogger.log(this, "PARTNER_ADD", email, "status=PENDING")
                         loadPartners()
                         Toast.makeText(this, "Partner request Server-এ যোগ হয়েছে।", Toast.LENGTH_SHORT).show()
                     }
@@ -119,7 +120,10 @@ class PartnerManagementActivity : AppCompatActivity() {
 
     private fun updateStatus(p: AdminPartner, status: String) {
         partnersRef().document(p.id).update("status", status)
-            .addOnSuccessListener { loadPartners() }
+            .addOnSuccessListener {
+                AdminAuditLogger.log(this, "PARTNER_STATUS", p.email, "status=$status")
+                loadPartners()
+            }
             .addOnFailureListener { error ->
                 Toast.makeText(this, "Status update ব্যর্থ: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
             }
@@ -132,7 +136,10 @@ class PartnerManagementActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Remove") { _, _ ->
                 partnersRef().document(p.id).delete()
-                    .addOnSuccessListener { loadPartners() }
+                    .addOnSuccessListener {
+                        AdminAuditLogger.log(this, "PARTNER_REMOVE", p.email, "partnerId=undefined")
+                        loadPartners()
+                    }
                     .addOnFailureListener { error ->
                         Toast.makeText(this, "Remove ব্যর্থ: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
                     }
