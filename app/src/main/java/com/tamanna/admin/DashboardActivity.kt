@@ -14,14 +14,16 @@ import com.google.firebase.firestore.Source
 
 class DashboardActivity : AppCompatActivity() {
     private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { refreshEnterpriseConnection() }, { message -> enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase Connection Failed\\n$message" })
+        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { refreshEnterpriseConnection() }, { message ->
+            enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase Connection Failed\n" + message
+        })
     }
+
     private lateinit var partnerCount: TextView
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
     private lateinit var suspendedCount: TextView
     private lateinit var enterpriseConnectionStatus: TextView
-    private lateinit var enterpriseDataStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
@@ -30,37 +32,55 @@ class DashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (!AdminSecurityGuard.requireUnlocked(this)) return
         setContentView(R.layout.activity_dashboard)
+
         firebaseAuth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
+
         partnerCount = findViewById(R.id.tvPartnerCount)
         pendingCount = findViewById(R.id.tvPendingCount)
         approvedCount = findViewById(R.id.tvApprovedCount)
         suspendedCount = findViewById(R.id.tvSuspendedCount)
         enterpriseConnectionStatus = findViewById(R.id.tvEnterpriseConnectionStatus)
-        enterpriseDataStatus = findViewById(R.id.tvEnterpriseDataStatus)
-        findViewById<Button>(R.id.btnUserApproval).setOnClickListener { startActivity(Intent(this, EnterpriseUserApprovalActivity::class.java)) }
-        findViewById<Button>(R.id.btnPartners).setOnClickListener { startActivity(Intent(this, PartnerManagementActivity::class.java)) }
-        findViewById<Button>(R.id.btnProducts).setOnClickListener { startActivity(Intent(this, EnterpriseProductsActivity::class.java)) }
-        findViewById<Button>(R.id.btnSalesPurchase).setOnClickListener { startActivity(Intent(this, EnterpriseSalesPurchaseActivity::class.java)) }
-        findViewById<Button>(R.id.btnReports).setOnClickListener { startActivity(Intent(this, EnterpriseDateRangeReportActivity::class.java)) }
-        findViewById<Button>(R.id.btnBusiness).setOnClickListener { startActivity(Intent(this, BusinessOverviewActivity::class.java)) }
-        findViewById<Button>(R.id.btnFinance).setOnClickListener { startActivity(Intent(this, FinanceProfitActivity::class.java)) }
-        findViewById<Button>(R.id.btnSettings).setOnClickListener { startActivity(Intent(this, AdminSettingsActivity::class.java)) }
-        findViewById<Button>(R.id.btnAudit).setOnClickListener { startActivity(Intent(this, AdminAuditActivity::class.java)) }
+
+        findViewById<Button>(R.id.btnUserApproval).setOnClickListener {
+            startActivity(Intent(this, EnterpriseUserApprovalActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnPartners).setOnClickListener {
+            startActivity(Intent(this, PartnerManagementActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnProducts).setOnClickListener {
+            startActivity(Intent(this, EnterpriseProductsActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnSalesPurchase).setOnClickListener {
+            startActivity(Intent(this, EnterpriseSalesPurchaseActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnReports).setOnClickListener {
+            startActivity(Intent(this, EnterpriseDateRangeReportActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnBusiness).setOnClickListener {
+            startActivity(Intent(this, BusinessOverviewActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnFinance).setOnClickListener {
+            startActivity(Intent(this, FinanceProfitActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, AdminSettingsActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnAudit).setOnClickListener {
+            startActivity(Intent(this, AdminAuditActivity::class.java))
+        }
+
+        verifyAdminSession()
     }
 
     override fun onResume() {
         super.onResume()
-        val unlocked = getSharedPreferences("admin_security", MODE_PRIVATE)
-            .getBoolean("admin_unlocked", false)
-        if (!unlocked) {
+        if (!AdminSecurityGuard.isUnlocked(this)) {
             startActivity(Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
             finish()
-            return
         }
-        verifyAdminSession()
     }
 
     private fun verifyAdminSession() {
@@ -72,6 +92,7 @@ class DashboardActivity : AppCompatActivity() {
                 verifyAdminUser(user)
             }
         }
+
         authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
         authStateListener = listener
         firebaseAuth.addAuthStateListener(listener)
@@ -82,92 +103,80 @@ class DashboardActivity : AppCompatActivity() {
             .addOnSuccessListener { doc ->
                 val serverUid = doc.getString("uid").orEmpty()
                 val serverRole = doc.getString("role").orEmpty()
+
                 if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
                     refreshPartnerSummary()
                     refreshEnterpriseConnection()
-                    refreshEnterpriseDataAccess()
                 } else {
                     forceReauthentication("এই Firebase account আর Server Admin হিসেবে অনুমোদিত নয়।")
                 }
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Server Admin verification ব্যর্থ হয়েছে। Dashboard খোলা থাকবে না।", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Server Admin verification ব্যর্থ হয়েছে। Dashboard খোলা থাকবে না.", Toast.LENGTH_LONG).show()
                 forceReauthentication(null)
             }
     }
 
     private fun openAdminGmailSetup() {
-        enterpriseConnectionStatus.text = "Admin Gmail: Not connected\\nAdmin Settings থেকে Gmail সংযুক্ত করুন।"
-        enterpriseDataStatus.text = "Enterprise Cloud Data: Admin Gmail সংযুক্ত হওয়ার পর যাচাই হবে।"
-        Toast.makeText(
-            this,
-            "Master PIN সঠিক হয়েছে। Dashboard খোলা আছে। Admin Settings থেকে Gmail সংযুক্ত করুন।",
-            Toast.LENGTH_LONG
-        ).show()
+        enterpriseConnectionStatus.text =
+            "Tamanna Enterprise: Admin Gmail সংযুক্ত নেই\nEnterprise User Approval খুললে Enterprise authorization করা যাবে।"
     }
 
     private fun forceReauthentication(message: String?) {
         firebaseAuth.signOut()
         getSharedPreferences("admin_identity", MODE_PRIVATE).edit()
-            .putBoolean("firebase_authenticated", false).remove("admin_email")
-            .putBoolean("admin_connected", false).apply()
+            .putBoolean("firebase_authenticated", false)
+            .remove("admin_email")
+            .putBoolean("admin_connected", false)
+            .apply()
         getSharedPreferences("admin_security", MODE_PRIVATE).edit()
-            .putBoolean("admin_unlocked", false).apply()
+            .putBoolean("admin_unlocked", false)
+            .apply()
+
         if (!message.isNullOrBlank()) Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+
         startActivity(Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
     }
 
-    override fun onDestroy() {
-        authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
-        authStateListener = null
-        super.onDestroy()
-    }
-
     private fun refreshEnterpriseConnection() {
         enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase সংযোগ যাচাই হচ্ছে..."
 
-        EnterpriseAccessManager.loadRequests(this, enterpriseGoogleLauncher, { requests ->
-            runOnUiThread {
+        EnterpriseAccessManager.loadRequests(
+            this,
+            enterpriseGoogleLauncher,
+            { requests ->
+                if (isFinishing || isDestroyed) return@loadRequests
+
                 val pending = requests.count { it.status == EnterpriseAccessManager.PENDING }
                 val active = requests.count { it.status == EnterpriseAccessManager.ACTIVE }
                 val blocked = requests.count { it.status == EnterpriseAccessManager.BLOCKED }
 
                 enterpriseConnectionStatus.text =
-                    "Tamanna Enterprise: Firebase Connected\\n" +
-                    "Access Requests: " + requests.size + "\\n" +
+                    "Tamanna Enterprise: Firebase Connected\n" +
+                    "Access Requests: " + requests.size + "\n" +
                     "Pending: " + pending + " | Active: " + active + " | Blocked: " + blocked
-            }
-        }, { message ->
-            runOnUiThread {
+            },
+            { message ->
+                if (isFinishing || isDestroyed) return@loadRequests
                 enterpriseConnectionStatus.text =
-                    "Tamanna Enterprise: Firebase Connection Failed\\n" + message
+                    "Tamanna Enterprise: Firebase Connection Failed\n" + message
             }
-        })
-    }
-
-    private fun refreshEnterpriseDataAccess() {
-        enterpriseDataStatus.text = "Enterprise Cloud Data: যাচাই হচ্ছে..."
-        EnterpriseBusinessDataReader.loadOverview(this) { success, message ->
-            runOnUiThread {
-                enterpriseDataStatus.text = if (success) {
-                    "Enterprise Cloud Data Access\n$message\nRead-only"
-                } else {
-                    "Enterprise Cloud Data Access\n$message"
-                }
-            }
-        }
+        )
     }
 
     private fun refreshPartnerSummary() {
         firestore.collection("admin_data").document("partners").collection("items")
             .get(Source.SERVER)
             .addOnSuccessListener { snapshot ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
                 var pending = 0
                 var approved = 0
                 var suspended = 0
+
                 snapshot.documents.forEach { doc ->
                     when (doc.getString("status").orEmpty()) {
                         "PENDING" -> pending++
@@ -175,21 +184,25 @@ class DashboardActivity : AppCompatActivity() {
                         "SUSPENDED" -> suspended++
                     }
                 }
+
                 partnerCount.text = "Partners\n" + snapshot.size()
                 pendingCount.text = "Pending\n" + pending
                 approvedCount.text = "Approved\n" + approved
                 suspendedCount.text = "Suspended\n" + suspended
             }
-            .addOnFailureListener { error ->
-                Toast.makeText(
-                    this,
-                    "Server থেকে Partner summary আনা যায়নি: " + (error.message ?: "Unknown error"),
-                    Toast.LENGTH_LONG
-                ).show()
+            .addOnFailureListener {
+                if (isFinishing || isDestroyed) return@addOnFailureListener
+
                 partnerCount.text = "Partners\n—"
                 pendingCount.text = "Pending\n—"
                 approvedCount.text = "Approved\n—"
                 suspendedCount.text = "Suspended\n—"
             }
+    }
+
+    override fun onDestroy() {
+        authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
+        authStateListener = null
+        super.onDestroy()
     }
 }
