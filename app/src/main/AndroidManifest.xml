@@ -10,6 +10,7 @@
         <activity android:name=".PartnerManagementActivity" android:exported="false" />
         <activity android:name=".BusinessOverviewActivity" android:exported="false" />
         <activity android:name=".FinanceProfitActivity" android:exported="false" />
+        <activity android:name=".EnterpriseProductsActivity" android:exported="false" />
         <activity android:name=".AdminSettingsActivity" android:exported="false" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
