@@ -33,14 +33,14 @@ object EnterpriseFirebaseAuth {
                     return@continueWithTask Tasks.forResult(false)
                 }
 
-                ensureAdminRegistry(context, auth, user.uid, email)
+                ensureAdminMembership(context, auth, user.uid, email)
             }
         } catch (e: Exception) {
             Tasks.forResult(false)
+        }
     }
-}
 
-    private fun ensureAdminRegistry(
+    private fun ensureAdminMembership(
         context: Context,
         auth: FirebaseAuth,
         uid: String,
@@ -68,17 +68,19 @@ object EnterpriseFirebaseAuth {
                 return@continueWithTask Tasks.forResult(false)
             }
 
+            val memberUid = member.getString("uid").orEmpty()
             val memberEmail = member.getString("email").orEmpty()
             val role = member.getString("role").orEmpty()
             val approved = member.getBoolean("approved") == true
             val blocked = member.getBoolean("blocked") == true
 
             Tasks.forResult(
-                member.getString("uid").orEmpty() == uid &&
+                memberUid == uid &&
                     memberEmail.equals(email, ignoreCase = true) &&
                     role == "OWNER" &&
                     approved &&
                     !blocked
             )
         }
-    }\n}
+    }
+}
