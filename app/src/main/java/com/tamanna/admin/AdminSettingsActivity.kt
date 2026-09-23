@@ -57,8 +57,9 @@ class AdminSettingsActivity : AppCompatActivity() {
                         return@addOnSuccessListener
                     }
 
-                    firestore.collection("admin_registry").document("primary").get()
-                        .addOnSuccessListener { doc ->
+                    ensureFirestoreOnline {
+                        firestore.collection("admin_registry").document("primary").get()
+                            .addOnSuccessListener { doc ->
                             val existingUid = doc.getString("uid").orEmpty()
 
                             if (existingUid.isBlank()) {
@@ -94,8 +95,9 @@ class AdminSettingsActivity : AppCompatActivity() {
                                 Toast.makeText(this, "এই Gmail Admin নয়। বর্তমান Server Admin পরিবর্তন করা যাবে না।", Toast.LENGTH_LONG).show()
                             }
                         }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this, "Server Admin যাচাই ব্যর্থ: ${e.message ?: "Firestore Rules/সংযোগ পরীক্ষা করুন।"}", Toast.LENGTH_LONG).show()
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Server Admin যাচাই ব্যর্থ: ${e.message ?: "Firestore Rules/সংযোগ পরীক্ষা করুন।"}", Toast.LENGTH_LONG).show()
+                            }
                         }
                 }
                 .addOnFailureListener { e ->
@@ -189,8 +191,9 @@ class AdminSettingsActivity : AppCompatActivity() {
 
         tvStatus.text = "Admin Status: CHECKING SERVER..."
 
-        firestore.collection("admin_registry").document("primary").get()
-            .addOnSuccessListener { doc ->
+        ensureFirestoreOnline {
+            firestore.collection("admin_registry").document("primary").get()
+                .addOnSuccessListener { doc ->
                 val serverUid = doc.getString("uid").orEmpty()
                 val serverEmail = doc.getString("email").orEmpty()
 
