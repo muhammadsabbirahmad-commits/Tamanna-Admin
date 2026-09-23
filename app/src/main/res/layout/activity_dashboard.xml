@@ -104,6 +104,17 @@
             android:textSize="14sp" />
 
         <TextView
+            android:id="@+id/tvEnterpriseDataStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:padding="14dp"
+            android:background="#FFFFFF"
+            android:text="Enterprise Cloud Data: যাচাই হচ্ছে..."
+            android:textColor="#146B4A"
+            android:textSize="14sp" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
