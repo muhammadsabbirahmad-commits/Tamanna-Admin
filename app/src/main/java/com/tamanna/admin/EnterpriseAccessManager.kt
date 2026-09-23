@@ -40,11 +40,28 @@ object EnterpriseAccessManager {
                     val db = FirebaseFirestore.getInstance(app)
                     db.collection("appConfig").document("admin").get(Source.SERVER)
                         .addOnSuccessListener { doc ->
-                            if (doc.exists() && doc.getString("uid").orEmpty() == user.uid &&
-                                doc.getString("role").orEmpty().uppercase() == "ADMIN") onReady(db)
-                            else onError("Enterprise Server-এ এই Admin Gmail-এর অনুমোদন পাওয়া যায়নি।")
+                            if (doc.exists()) {
+                                val valid = doc.getString("uid").orEmpty() == user.uid &&
+                                    doc.getString("email").orEmpty().equals(email, true) &&
+                                    doc.getString("role").orEmpty().uppercase() == "ADMIN"
+                                if (valid) onReady(db)
+                                else onError("Enterprise Server-এ এই Admin Gmail-এর অনুমোদন পাওয়া যায়নি।")
+                            } else {
+                                db.collection("accessUsers").document(user.uid).get(Source.SERVER)
+                                    .addOnSuccessListener { legacy ->
+                                        val valid = legacy.exists() &&
+                                            legacy.getString("uid").orEmpty() == user.uid &&
+                                            legacy.getString("email").orEmpty().equals(email, true) &&
+                                            legacy.getString("role").orEmpty().uppercase() == "ADMIN" &&
+                                            legacy.getBoolean("approved") == true &&
+                                            legacy.getBoolean("blocked") != true
+                                        if (valid) onReady(db)
+                                        else onError("Enterprise Server-এ এই Admin Gmail-এর অনুমোদন পাওয়া যায়নি।")
+                                    }
+                                    .addOnFailureListener { onError("Enterprise Admin verification ব্যর্থ হয়েছে।") }
+                            }
                         }
-                        .addOnFailureListener { onError("Enterprise Admin verification ব্যর্থ: ${it.localizedMessage ?: "Firestore Rules পরীক্ষা করুন।"}") }
+                        .addOnFailureListener { onError("Enterprise Admin verification ব্যর্থ হয়েছে।") }
                 }
                 .addOnFailureListener { onError("Enterprise Firebase Admin login ব্যর্থ: ${it.localizedMessage ?: "আবার চেষ্টা করুন।"}") }
         } catch (e: Exception) { onError(e.localizedMessage ?: "Enterprise Admin connection ব্যর্থ হয়েছে।") }
