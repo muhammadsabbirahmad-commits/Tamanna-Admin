@@ -35,6 +35,15 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        val unlocked = getSharedPreferences("admin_security", MODE_PRIVATE)
+            .getBoolean("admin_unlocked", false)
+        if (!unlocked) {
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+            return
+        }
         verifyAdminSession()
     }
 
