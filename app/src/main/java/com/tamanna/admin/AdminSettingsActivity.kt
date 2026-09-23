@@ -144,14 +144,9 @@ class AdminSettingsActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnAdminLogout).setOnClickListener {
-            firebaseAuth.signOut()
-
-            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                .putBoolean(FIREBASE_AUTHENTICATED, false)
-                .remove(ADMIN_EMAIL)
-                .putBoolean(ADMIN_CONNECTED, false)
-                .apply()
-
+            // Logout means locking the local Admin session.
+            // Keep the permanent Server Admin Gmail/Firebase session intact so
+            // the approved Admin account does not need to be selected again.
             getSharedPreferences("admin_security", MODE_PRIVATE)
                 .edit()
                 .putBoolean("admin_unlocked", false)
@@ -161,6 +156,7 @@ class AdminSettingsActivity : AppCompatActivity() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
             startActivity(intent)
+            finish()
         }
 
         refreshAdminIdentity()
