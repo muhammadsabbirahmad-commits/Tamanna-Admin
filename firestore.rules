@@ -31,6 +31,15 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    match /admin_audit/{eventId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.eventId == eventId;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
