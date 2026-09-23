@@ -3,13 +3,18 @@ package com.tamanna.admin
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.*
 
-class EnterpriseUserApprovalActivity : AppCompatActivity() {\n    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->\n        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { load() }, { message -> Toast.makeText(this, message, Toast.LENGTH_LONG).show() })\n    }
+class EnterpriseUserApprovalActivity : AppCompatActivity() {
     private lateinit var list: LinearLayout
+    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { load() }, { message -> Toast.makeText(this, message, Toast.LENGTH_LONG).show() })
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
