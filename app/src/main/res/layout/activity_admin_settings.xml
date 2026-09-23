@@ -66,6 +66,45 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="Business Context"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etBusinessId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Business ID"
+            android:singleLine="true"
+            android:inputType="text"/>
+
+        <EditText
+            android:id="@+id/etBusinessName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Business name"
+            android:singleLine="true"
+            android:inputType="text"/>
+
+        <Button
+            android:id="@+id/btnSaveBusinessContext"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Business Context"/>
+
+        <TextView
+            android:id="@+id/tvBusinessContextStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Business Context: legacy-business"
+            android:textSize="14sp"
+            android:paddingTop="6dp"
+            android:paddingBottom="20dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="Security"
             android:textSize="18sp"
             android:textStyle="bold"
