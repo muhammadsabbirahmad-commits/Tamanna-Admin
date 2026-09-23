@@ -18,7 +18,7 @@ class FinanceProfitActivity : AppCompatActivity() {
  private lateinit var tvPartners: TextView
 
  override fun onResume(){super.onResume();AdminSecurityGuard.requireUnlocked(this)}
- override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);setContentView(R.layout.activity_finance_profit);tvSales=findViewById(R.id.tvFinanceSales); tvPurchase=findViewById(R.id.tvFinancePurchase); tvGross=findViewById(R.id.tvFinanceGrossProfit); tvNet=findViewById(R.id.tvFinanceNetProfit); tvStatus=findViewById(R.id.tvFinanceStatus);tvExpenses=findViewById(R.id.tvFinanceExpenses);tvWithdrawals=findViewById(R.id.tvFinanceWithdrawals);tvDamage=findViewById(R.id.tvFinanceDamage);tvPartners=findViewById(R.id.tvFinancePartners);findViewById<Button>(R.id.btnRefreshFinance).setOnClickListener{loadFinance()};loadFinance()}
+ override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);if(!AdminSecurityGuard.requireUnlocked(this)) return;setContentView(R.layout.activity_finance_profit);tvSales=findViewById(R.id.tvFinanceSales); tvPurchase=findViewById(R.id.tvFinancePurchase); tvGross=findViewById(R.id.tvFinanceGrossProfit); tvNet=findViewById(R.id.tvFinanceNetProfit); tvStatus=findViewById(R.id.tvFinanceStatus);tvExpenses=findViewById(R.id.tvFinanceExpenses);tvWithdrawals=findViewById(R.id.tvFinanceWithdrawals);tvDamage=findViewById(R.id.tvFinanceDamage);tvPartners=findViewById(R.id.tvFinancePartners);findViewById<Button>(R.id.btnRefreshFinance).setOnClickListener{loadFinance()};loadFinance()}
  private fun loadFinance(){
   tvStatus.text="Tamanna Enterprise server যাচাই হচ্ছে..."
   EnterprisePartnerFinanceReader.load(this){ok,summary,message->runOnUiThread{
