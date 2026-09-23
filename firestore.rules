@@ -16,14 +16,9 @@ service cloud.firestore {
                       !exists(/databases/$(database)/documents/admin_registry/primary)
                       || resource.data.uid == request.auth.uid
                     );
-      allow create: if request.auth != null
-                    && !exists(/databases/$(database)/documents/admin_registry/primary)
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.role == 'admin';
-      allow update: if request.auth != null
-                    && resource.data.uid == request.auth.uid
-                    && request.resource.data.uid == resource.data.uid
-                    && request.resource.data.role == 'admin';
+      // The primary Admin identity must be provisioned server-side.
+      // Clients must never be able to self-claim or modify the Admin registry.
+      allow create, update, delete: if false;
       allow delete: if false;
     }
 
