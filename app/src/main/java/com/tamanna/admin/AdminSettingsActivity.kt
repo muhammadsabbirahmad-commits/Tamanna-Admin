@@ -3,6 +3,7 @@ package com.tamanna.admin
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +27,9 @@ class AdminSettingsActivity : AppCompatActivity() {
 
     private lateinit var tvEmail: TextView
     private lateinit var tvStatus: TextView
+    private lateinit var etBusinessId: EditText
+    private lateinit var etBusinessName: EditText
+    private lateinit var tvBusinessContextStatus: TextView
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
 
@@ -137,11 +141,31 @@ class AdminSettingsActivity : AppCompatActivity() {
 
         tvEmail = findViewById(R.id.tvAdminEmail)
         tvStatus = findViewById(R.id.tvAdminStatus)
+        etBusinessId = findViewById(R.id.etBusinessId)
+        etBusinessName = findViewById(R.id.etBusinessName)
+        tvBusinessContextStatus = findViewById(R.id.tvBusinessContextStatus)
+
+        loadBusinessContext()
         firebaseAuth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
         findViewById<Button>(R.id.btnConnectAdminGmail).setOnClickListener {
             connectAdminGmail()
+        }
+
+
+        findViewById<Button>(R.id.btnSaveBusinessContext).setOnClickListener {
+            val saved = AdminBusinessContext.save(
+                this,
+                etBusinessId.text.toString(),
+                etBusinessName.text.toString()
+            )
+            if (saved) {
+                loadBusinessContext()
+                Toast.makeText(this, "Business Context সংরক্ষণ হয়েছে।", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Business ID ও Business name সঠিকভাবে দিন।", Toast.LENGTH_LONG).show()
+            }
         }
 
         findViewById<Button>(R.id.btnRefreshSettings).setOnClickListener {
@@ -165,6 +189,15 @@ class AdminSettingsActivity : AppCompatActivity() {
         }
 
         refreshAdminIdentity()
+    }
+
+
+    private fun loadBusinessContext() {
+        val id = AdminBusinessContext.getBusinessId(this)
+        val name = AdminBusinessContext.getBusinessName(this)
+        etBusinessId.setText(id)
+        etBusinessName.setText(name)
+        tvBusinessContextStatus.text = "Business Context: $id\n$name"
     }
 
     private fun connectAdminGmail() {
