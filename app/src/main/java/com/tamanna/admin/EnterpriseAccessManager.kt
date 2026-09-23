@@ -1,6 +1,8 @@
 package com.tamanna.admin
 
 import android.content.Context
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -20,7 +22,7 @@ object EnterpriseAccessManager {
     const val REJECTED = "REJECTED"
     const val EXPIRED = "EXPIRED"
 
-    fun withEnterpriseAdmin(context: Context, onReady: (FirebaseFirestore) -> Unit, onError: (String) -> Unit) {
+    fun buildEnterpriseGoogleIntent(context: Context): Intent {\n        val options = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(\n            com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN\n        ).requestIdToken("241311598063-d6pqnutv6598pj4lmsikqs7bsfs0m0bs.apps.googleusercontent.com").requestEmail().build()\n        return GoogleSignIn.getClient(context, options).signInIntent\n    }\n\n    fun finishEnterpriseGoogleSignIn(context: Context, data: Intent?, onReady: (FirebaseFirestore) -> Unit, onError: (String) -> Unit) {\n        try {\n            val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)\n            val token = account.idToken.orEmpty()\n            val email = account.email.orEmpty().trim()\n            if (token.isBlank() || email.isBlank()) { onError("Admin Gmail-এর Enterprise authorization token পাওয়া যায়নি।"); return }\n            authenticateEnterprise(context, token, email, onReady, onError)\n        } catch (e: Exception) { onError("Enterprise Google Sign-In ব্যর্থ হয়েছে।") }\n    }\n\n    private fun authenticateEnterprise(context: Context, token: String, email: String, onReady: (FirebaseFirestore) -> Unit, onError: (String) -> Unit) {
         try {
             // Enterprise Firebase requires an ID token whose audience belongs to
             // the Enterprise project's Web OAuth client, not the Admin project's client.
@@ -83,8 +85,8 @@ object EnterpriseAccessManager {
                 .addOnFailureListener { onError("Admin Gmail-এর Enterprise Google token পাওয়া যায়নি। Admin Gmail একবার পুনরায় সংযুক্ত করুন।") }        } catch (e: Exception) { onError(e.localizedMessage ?: "Enterprise Admin connection ব্যর্থ হয়েছে।") }
     }
 
-    fun loadRequests(context: Context, onResult: (List<EnterpriseAccessRequest>) -> Unit, onError: (String) -> Unit) {
-        withEnterpriseAdmin(context, { db ->
+    fun withEnterpriseAdmin(context: Context, launcher: ActivityResultLauncher<Intent>, onReady: (FirebaseFirestore) -> Unit, onError: (String) -> Unit) {\n        try {\n            val options = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)\n                .requestIdToken("241311598063-d6pqnutv6598pj4lmsikqs7bsfs0m0bs.apps.googleusercontent.com").requestEmail().build()\n            GoogleSignIn.getClient(context, options).silentSignIn()\n                .addOnSuccessListener { account ->\n                    val token = account.idToken.orEmpty(); val email = account.email.orEmpty().trim()\n                    if (token.isBlank() || email.isBlank()) launcher.launch(buildEnterpriseGoogleIntent(context))\n                    else authenticateEnterprise(context, token, email, onReady, onError)\n                }\n                .addOnFailureListener { launcher.launch(buildEnterpriseGoogleIntent(context)) }\n        } catch (e: Exception) { onError(e.localizedMessage ?: "Enterprise Admin connection ব্যর্থ হয়েছে।") }\n    }\n\n    fun loadRequests(context: Context, launcher: ActivityResultLauncher<Intent>, onResult: (List<EnterpriseAccessRequest>) -> Unit, onError: (String) -> Unit) {
+        withEnterpriseAdmin(context, launcher, { db ->
             db.collection(COLLECTION).get(Source.SERVER)
                 .addOnSuccessListener { snapshot ->
                     val now = System.currentTimeMillis()
@@ -104,7 +106,7 @@ object EnterpriseAccessManager {
         }, onError)
     }
 
-    fun updateRequest(context: Context, request: EnterpriseAccessRequest, status: String,
+    fun updateRequest(context: Context, launcher: ActivityResultLauncher<Intent>, request: EnterpriseAccessRequest, status: String,
                       startAt: Long, expiresAt: Long, notificationsEnabled: Boolean,
                       onSuccess: () -> Unit, onError: (String) -> Unit) {
         withEnterpriseAdmin(context, { db ->
