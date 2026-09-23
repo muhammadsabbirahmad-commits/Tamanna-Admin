@@ -87,7 +87,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
             EnterpriseAccessManager.ACTIVE -> {
                 val block=Button(this).apply{text="Block"}; val extend=Button(this).apply{text="Extend"}
                 box.addView(block);box.addView(extend)
-                block.setOnClickListener { EnterpriseAccessManager.updateRequest(this,request,EnterpriseAccessManager.BLOCKED,request.startAt,request.expiresAt,request.notificationsEnabled,{Toast.makeText(this,"User BLOCKED হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()}) }
+                block.setOnClickListener { EnterpriseAccessManager.updateRequest(this,enterpriseGoogleLauncher,request,EnterpriseAccessManager.BLOCKED,request.startAt,request.expiresAt,request.notificationsEnabled,{Toast.makeText(this,"User BLOCKED হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()}) }
                 extend.setOnClickListener { showExtend(request) }
             }
             EnterpriseAccessManager.BLOCKED -> {
