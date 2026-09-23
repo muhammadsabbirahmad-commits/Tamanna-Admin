@@ -194,35 +194,52 @@ class AdminSettingsActivity : AppCompatActivity() {
         ensureFirestoreOnline {
             firestore.collection("admin_registry").document("primary").get()
                 .addOnSuccessListener { doc ->
-                val serverUid = doc.getString("uid").orEmpty()
-                val serverEmail = doc.getString("email").orEmpty()
+                    val serverUid = doc.getString("uid").orEmpty()
+                    val serverEmail = doc.getString("email").orEmpty()
 
-                if (serverUid == user.uid && serverEmail.isNotBlank()) {
-                    getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                        .putString(ADMIN_EMAIL, serverEmail)
-                        .putBoolean(ADMIN_CONNECTED, true)
-                        .apply()
-                    tvEmail.text = "Admin Gmail: $serverEmail"
-                    tvStatus.text = "Admin Status: ACTIVE"
-                } else {
-                    getSharedPreferences(PREFS, MODE_PRIVATE).edit()
-                        .remove(ADMIN_EMAIL)
-                        .putBoolean(ADMIN_CONNECTED, false)
-                        .apply()
-                    tvEmail.text = "Admin Gmail: Not connected"
-                    tvStatus.text = "Admin Status: NOT CONNECTED"
+                    if (serverUid == user.uid && serverEmail.isNotBlank()) {
+                        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                            .putString(ADMIN_EMAIL, serverEmail)
+                            .putBoolean(ADMIN_CONNECTED, true)
+                            .apply()
+                        tvEmail.text = "Admin Gmail: $serverEmail"
+                        tvStatus.text = "Admin Status: ACTIVE"
+                    } else {
+                        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                            .remove(ADMIN_EMAIL)
+                            .putBoolean(ADMIN_CONNECTED, false)
+                            .apply()
+                        tvEmail.text = "Admin Gmail: Not connected"
+                        tvStatus.text = "Admin Status: NOT CONNECTED"
+                    }
                 }
+                .addOnFailureListener { e ->
+                    tvEmail.text = if (!localEmail.isNullOrBlank()) {
+                        "Admin Gmail: $localEmail"
+                    } else {
+                        "Admin Gmail: Not connected"
+                    }
+                    tvStatus.text = "Admin Status: SERVER CHECK FAILED"
+                    Toast.makeText(
+                        this,
+                        "Server Admin যাচাই করা যায়নি: ${e.message ?: "Internet/Firestore connection পরীক্ষা করুন।"}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+        }
+    }
+
+    private fun ensureFirestoreOnline(action: () -> Unit) {
+        tvStatus.text = "Admin Status: CONNECTING SERVER..."
+        firestore.enableNetwork()
+            .addOnSuccessListener {
+                action()
             }
             .addOnFailureListener { e ->
-                tvEmail.text = if (!localEmail.isNullOrBlank()) {
-                    "Admin Gmail: $localEmail"
-                } else {
-                    "Admin Gmail: Not connected"
-                }
-                tvStatus.text = "Admin Status: SERVER CHECK FAILED"
+                tvStatus.text = "Admin Status: SERVER OFFLINE"
                 Toast.makeText(
                     this,
-                    "Server Admin যাচাই করা যায়নি: ${e.message ?: "Internet/Firestore connection পরীক্ষা করুন।"}",
+                    "Firestore server connection ব্যর্থ: ${e.message ?: "Internet/Firestore configuration পরীক্ষা করুন।"}",
                     Toast.LENGTH_LONG
                 ).show()
             }
