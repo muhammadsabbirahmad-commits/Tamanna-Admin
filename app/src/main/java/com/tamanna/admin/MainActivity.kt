@@ -20,14 +20,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Master PIN is required on every fresh app launch.
+        // Never auto-open the Admin Dashboard from a previously unlocked state.
+        getSharedPreferences(PREFS, MODE_PRIVATE)
+            .edit()
+            .putBoolean(ADMIN_UNLOCKED, false)
+            .apply()
+
         val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
         val now = System.currentTimeMillis()
         val lockUntil = prefs.getLong("lock_until", 0L)
-
-        if (prefs.getBoolean(ADMIN_UNLOCKED, false) && now >= lockUntil) {
-            openDashboard()
-            return
-        }
 
         setContentView(R.layout.activity_main)
         val pinInput = findViewById<EditText>(R.id.etMasterPin)
@@ -43,15 +45,20 @@ class MainActivity : AppCompatActivity() {
             if (System.currentTimeMillis() < currentLock) return@setOnClickListener
 
             if (sha256(pinInput.text.toString()) == MASTER_PIN_HASH) {
-                prefs.edit().putBoolean(ADMIN_UNLOCKED, true)
-                    .putInt("failed_attempts", 0).putLong("lock_until", 0L).apply()
+                prefs.edit()
+                    .putBoolean(ADMIN_UNLOCKED, true)
+                    .putInt("failed_attempts", 0)
+                    .putLong("lock_until", 0L)
+                    .apply()
                 openDashboard()
             } else {
                 val attempts = prefs.getInt("failed_attempts", 0) + 1
                 pinInput.text.clear()
                 if (attempts >= MAX_ATTEMPTS) {
-                    prefs.edit().putInt("failed_attempts", 0)
-                        .putLong("lock_until", System.currentTimeMillis() + LOCKOUT_MS).apply()
+                    prefs.edit()
+                        .putInt("failed_attempts", 0)
+                        .putLong("lock_until", System.currentTimeMillis() + LOCKOUT_MS)
+                        .apply()
                     button.isEnabled = false
                     Toast.makeText(this, "৫ বার ভুল PIN হয়েছে। ৫ মিনিটের জন্য লক।", Toast.LENGTH_LONG).show()
                 } else {
