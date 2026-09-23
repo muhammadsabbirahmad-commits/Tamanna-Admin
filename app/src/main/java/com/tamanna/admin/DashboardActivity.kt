@@ -123,18 +123,25 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun refreshEnterpriseConnection() {
-        val businessId = AdminBusinessContext.getBusinessId(this)
-        val businessName = AdminBusinessContext.getBusinessName(this)
-        enterpriseConnectionStatus.text = "Tamanna Enterprise: যাচাই হচ্ছে..."
-        if (businessId == AdminBusinessContext.DEFAULT_ID) {
-            enterpriseConnectionStatus.text = "Tamanna Enterprise: Business ID সেট করা হয়নি"
-            return
-        }
-        EnterpriseMembershipReader.load(this) { _, membership, message ->
+        enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase সংযোগ যাচাই হচ্ছে..."
+
+        EnterpriseAccessManager.loadRequests(this, { requests ->
             runOnUiThread {
-                enterpriseConnectionStatus.text = "Business: $businessName\\nID: $businessId\\n$message"
+                val pending = requests.count { it.status == EnterpriseAccessManager.PENDING }
+                val active = requests.count { it.status == EnterpriseAccessManager.ACTIVE }
+                val blocked = requests.count { it.status == EnterpriseAccessManager.BLOCKED }
+
+                enterpriseConnectionStatus.text =
+                    "Tamanna Enterprise: Firebase Connected\\n" +
+                    "Access Requests: " + requests.size + "\\n" +
+                    "Pending: " + pending + " | Active: " + active + " | Blocked: " + blocked
             }
-        }
+        }, { message ->
+            runOnUiThread {
+                enterpriseConnectionStatus.text =
+                    "Tamanna Enterprise: Firebase Connection Failed\\n" + message
+            }
+        })
     }
 
     private fun refreshEnterpriseDataAccess() {
