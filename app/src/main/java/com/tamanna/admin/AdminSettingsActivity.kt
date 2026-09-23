@@ -22,6 +22,7 @@ class AdminSettingsActivity : AppCompatActivity() {
         private const val PREFS = "admin_identity"
         private const val ADMIN_EMAIL = "admin_email"
         private const val ADMIN_CONNECTED = "admin_connected"
+        private const val FIREBASE_AUTHENTICATED = "firebase_authenticated"
     }
 
     private lateinit var tvEmail: TextView
@@ -58,6 +59,10 @@ class AdminSettingsActivity : AppCompatActivity() {
                         return@addOnSuccessListener
                     }
 
+                    getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                        .putBoolean(FIREBASE_AUTHENTICATED, true)
+                        .apply()
+
                     ensureFirestoreOnline {
                         firestore.collection("admin_registry").document("primary").get(Source.SERVER)
                             .addOnSuccessListener { doc ->
@@ -92,6 +97,9 @@ class AdminSettingsActivity : AppCompatActivity() {
                                 Toast.makeText(this, "Server Admin যাচাই সফল হয়েছে।", Toast.LENGTH_SHORT).show()
                             } else {
                                 firebaseAuth.signOut()
+                                getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                                    .putBoolean(FIREBASE_AUTHENTICATED, false)
+                                    .apply()
                                 refreshAdminIdentity()
                                 Toast.makeText(this, "এই Gmail Admin নয়। বর্তমান Server Admin পরিবর্তন করা যাবে না।", Toast.LENGTH_LONG).show()
                             }
@@ -143,6 +151,9 @@ class AdminSettingsActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnAdminLogout).setOnClickListener {
             firebaseAuth.signOut()
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putBoolean(FIREBASE_AUTHENTICATED, false)
+                .apply()
             getSharedPreferences("admin_security", MODE_PRIVATE)
                 .edit()
                 .putBoolean("admin_unlocked", false)
