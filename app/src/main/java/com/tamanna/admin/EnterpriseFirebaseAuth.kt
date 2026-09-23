@@ -67,29 +67,7 @@ object EnterpriseFirebaseAuth {
                 )
             }
 
-            val adminData = hashMapOf(
-                "uid" to uid,
-                "email" to email,
-                "role" to "ADMIN"
-            )
-
-            accessUser.set(
-                hashMapOf(
-                    "uid" to uid,
-                    "email" to email,
-                    "role" to "ADMIN",
-                    "approved" to true,
-                    "blocked" to false
-                )
-            ).continueWithTask { accessTask ->
-                if (!accessTask.isSuccessful) {
-                    return@continueWithTask Tasks.forResult(false)
-                }
-
-                adminConfig.set(adminData).continueWithTask { configSetTask ->
-                    Tasks.forResult(configSetTask.isSuccessful)
-                }
-            }
+            return@continueWithTask Tasks.forResult(false)
         }
     }
 }
