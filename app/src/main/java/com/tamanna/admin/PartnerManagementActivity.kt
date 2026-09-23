@@ -138,7 +138,7 @@ class PartnerManagementActivity : AppCompatActivity() {
             .setPositiveButton("Remove") { _, _ ->
                 partnersRef().document(p.id).delete()
                     .addOnSuccessListener {
-                        AdminAuditLogger.log(this, "PARTNER_REMOVE", p.email, "partnerId=undefined")
+                        AdminAuditLogger.log(this, "PARTNER_REMOVE", p.email, "partnerId=${p.id}")
                         loadPartners()
                     }
                     .addOnFailureListener { error ->
