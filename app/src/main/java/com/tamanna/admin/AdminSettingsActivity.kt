@@ -83,6 +83,9 @@ class AdminSettingsActivity : AppCompatActivity() {
                                                 "Admin Gmail, Admin Server এবং Tamanna Enterprise Authorization সফল হয়েছে।",
                                                 Toast.LENGTH_LONG
                                             ).show()
+
+                                            startActivity(Intent(this, DashboardActivity::class.java))
+                                            finish()
                                         } else {
                                             Toast.makeText(
                                                 this,
