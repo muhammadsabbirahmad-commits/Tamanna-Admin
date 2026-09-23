@@ -88,10 +88,10 @@ class DashboardActivity : AppCompatActivity() {
                         "SUSPENDED" -> suspended++
                     }
                 }
-                partnerCount.text = "Partners\\n" + snapshot.size()
-                pendingCount.text = "Pending\\n" + pending
-                approvedCount.text = "Approved\\n" + approved
-                suspendedCount.text = "Suspended\\n" + suspended
+                partnerCount.text = "Partners\n" + snapshot.size()
+                pendingCount.text = "Pending\n" + pending
+                approvedCount.text = "Approved\n" + approved
+                suspendedCount.text = "Suspended\n" + suspended
             }
             .addOnFailureListener { error ->
                 Toast.makeText(
@@ -99,10 +99,10 @@ class DashboardActivity : AppCompatActivity() {
                     "Server থেকে Partner summary আনা যায়নি: " + (error.message ?: "Unknown error"),
                     Toast.LENGTH_LONG
                 ).show()
-                partnerCount.text = "Partners\\n—"
-                pendingCount.text = "Pending\\n—"
-                approvedCount.text = "Approved\\n—"
-                suspendedCount.text = "Suspended\\n—"
+                partnerCount.text = "Partners\n—"
+                pendingCount.text = "Pending\n—"
+                approvedCount.text = "Approved\n—"
+                suspendedCount.text = "Suspended\n—"
             }
     }
 }
