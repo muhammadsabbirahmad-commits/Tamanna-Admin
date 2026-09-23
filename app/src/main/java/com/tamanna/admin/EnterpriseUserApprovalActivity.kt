@@ -11,9 +11,10 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class EnterpriseUserApprovalActivity : AppCompatActivity() {
+    private var loadInProgress = false
     private lateinit var list: LinearLayout
     private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { load() }, { message -> Toast.makeText(this, message, Toast.LENGTH_LONG).show() })
+        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { loadInProgress = false; load() }, { message -> loadInProgress = false; Toast.makeText(this, message, Toast.LENGTH_LONG).show() })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +42,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
                 requests.forEach { renderRequest(it) }
             }
         }, { message ->
-            runOnUiThread { list.removeAllViews(); addText("Enterprise User Approval", 22, true); addText(message, 15, false); Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
+            runOnUiThread { loadInProgress = false; list.removeAllViews(); addText("Enterprise User Approval", 22, true); addText(message, 15, false); Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
         })
     }
 
