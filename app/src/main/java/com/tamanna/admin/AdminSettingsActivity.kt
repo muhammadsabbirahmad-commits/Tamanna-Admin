@@ -273,8 +273,8 @@ class AdminSettingsActivity : AppCompatActivity() {
                 "role" to "admin"
             )
 
-            ref.create(adminData).continueWithTask { createTask ->
-                com.google.android.gms.tasks.Tasks.forResult(createTask.isSuccessful)
+            ref.set(adminData).continueWithTask { setTask ->
+                com.google.android.gms.tasks.Tasks.forResult(setTask.isSuccessful)
             }
         }
     }
