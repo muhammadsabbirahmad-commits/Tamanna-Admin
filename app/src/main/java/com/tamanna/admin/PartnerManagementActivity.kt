@@ -11,14 +11,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.Source\nimport java.util.Locale
 
 data class AdminPartner(val id: String, val status: String, val email: String, val name: String)
 
 class PartnerManagementActivity : AppCompatActivity() {
     private val partners = mutableListOf<AdminPartner>()
+    private val enterprisePartners = mutableListOf<EnterprisePartner>()
     private lateinit var adapter: ArrayAdapter<String>
     private lateinit var emptyText: TextView
+    private lateinit var enterpriseStatus: TextView
+    private lateinit var enterpriseAdapter: ArrayAdapter<String>
     private lateinit var firestore: FirebaseFirestore
 
     override fun onResume() {
@@ -31,10 +34,15 @@ class PartnerManagementActivity : AppCompatActivity() {
         setContentView(R.layout.activity_partner_management)
         firestore = FirebaseFirestore.getInstance()
         emptyText = findViewById(R.id.tvEmpty)
+        enterpriseStatus = findViewById(R.id.tvEnterprisePartnerStatus)
         val list = findViewById<ListView>(R.id.lvPartners)
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         list.adapter = adapter
         findViewById<Button>(R.id.btnAddPartner).setOnClickListener { showAddDialog() }
+        val enterpriseList = findViewById<ListView>(R.id.lvEnterprisePartners)
+        enterpriseAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
+        enterpriseList.adapter = enterpriseAdapter
+        findViewById<Button>(R.id.btnRefreshEnterprisePartners).setOnClickListener { loadEnterprisePartners() }
         list.setOnItemClickListener { _, _, position, _ -> showPartnerActions(position) }
         loadPartners()
     }
@@ -146,6 +154,25 @@ class PartnerManagementActivity : AppCompatActivity() {
                 Toast.makeText(this, "Server থেকে Partner list আনা যায়নি: " + (error.message ?: "Unknown error"), Toast.LENGTH_LONG).show()
             }
     }
+
+    private fun loadEnterprisePartners() {
+        enterpriseStatus.text = "Tamanna Enterprise server থেকে Partner data যাচাই হচ্ছে..."
+        EnterprisePartnerReader.load(this) { _, list, message ->
+            runOnUiThread {
+                enterprisePartners.clear()
+                enterprisePartners.addAll(list)
+                enterpriseAdapter.clear()
+                enterpriseAdapter.addAll(enterprisePartners.map {
+                    val state = if (it.active) "ACTIVE" else "INACTIVE"
+                    "${it.name}\nInvestment: ৳ ${money(it.investment)}\nProfit Share: ${money(it.percentage)}% • $state"
+                })
+                enterpriseAdapter.notifyDataSetChanged()
+                enterpriseStatus.text = message
+            }
+        }
+    }
+
+    private fun money(value: Double): String = String.format(Locale.US, "%.2f", value)
 
     private fun refreshList() {
         partners.sortBy { it.name.lowercase() }
