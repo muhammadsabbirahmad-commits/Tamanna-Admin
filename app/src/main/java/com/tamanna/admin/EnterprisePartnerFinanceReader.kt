@@ -24,7 +24,7 @@ object EnterprisePartnerFinanceReader {
     val ns=listOf(SALES,PURCHASES,PARTNERS,FINANCE); val refs=ns.map{n->db.collection("businesses").document(businessId).collection("data").document(n).get(Source.SERVER)}
     Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(refs).addOnSuccessListener { s ->
      val sales=s[0].get("values") as? Map<*,*>; val purchases=s[1].get("values") as? Map<*,*>; val partners=s[2].get("values") as? Map<*,*>; val finance=s[3].get("values") as? Map<*,*>
-     val salesTotal=sumSales(sales?.get("sales")); val purchaseTotal=sumPurchases(purchases?.get("purchases")); val expenses=sumField(finance?.get("expenses"),"amount"); val withdrawals=sumField(finance?.get("withdrawals"),"amount"); val damage=sumDamage(finance?.get("damages")); val gross=salesTotal-purchaseTotal; val net=gross-expenses-damage
+     val salesTotal=sumSales(sales?.get("sales")); val purchaseTotal=sumPurchases(purchases?.get("purchases")); val expenses=sumField(finance?.get("expenses"),"amount"); val withdrawals=sumField(finance?.get("withdrawals"),"amount"); val damage=sumDamage(finance?.get("damages")); val gross=salesTotal-costOfSales; val net=gross-expenses-damage
      onResult(true,EnterprisePartnerFinanceSummary(salesTotal,purchaseTotal,gross,expenses,withdrawals,damage,net,countPartners(partners?.get("partners")),sumField(partners?.get("partners"),"investment"),sumField(partners?.get("partners"),"percentage")),"Enterprise server Finance/Partner data পড়া হয়েছে।")
     }.addOnFailureListener{onResult(false,null,"Enterprise Finance/Partner data পড়া ব্যর্থ: "+(it.message?:"Firestore Rules পরীক্ষা করুন।"))}
    }.addOnFailureListener{onResult(false,null,"Business membership যাচাই ব্যর্থ: "+(it.message?:"Internet/Firestore Rules পরীক্ষা করুন।"))}
@@ -34,6 +34,6 @@ object EnterprisePartnerFinanceReader {
  private fun countPartners(v:Any?):Int=array(v)?.length()?:0
  private fun sumField(v:Any?,f:String):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length())t+=a.optJSONObject(i)?.optDouble(f,0.0)?:0.0;return t}
  private fun sumSales(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("salePrice",0.0)*o.optDouble("quantity",0.0)};return t}
- private fun sumPurchases(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}
+ private fun sumSalesCost(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}\n private fun sumPurchases(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("purchasePrice",0.0)*o.optDouble("quantity",0.0)};return t}
  private fun sumDamage(v:Any?):Double{val a=array(v)?:return 0.0;var t=0.0;for(i in 0 until a.length()){val o=a.optJSONObject(i)?:continue;t+=o.optDouble("quantity",0.0)*o.optDouble("unitCost",0.0)};return t}
 }
