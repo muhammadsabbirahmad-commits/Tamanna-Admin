@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
 
 class AdminSettingsActivity : AppCompatActivity() {
 
@@ -58,7 +59,7 @@ class AdminSettingsActivity : AppCompatActivity() {
                     }
 
                     ensureFirestoreOnline {
-                        firestore.collection("admin_registry").document("primary").get()
+                        firestore.collection("admin_registry").document("primary").get(Source.SERVER)
                             .addOnSuccessListener { doc ->
                             val existingUid = doc.getString("uid").orEmpty()
 
@@ -192,7 +193,7 @@ class AdminSettingsActivity : AppCompatActivity() {
         tvStatus.text = "Admin Status: CHECKING SERVER..."
 
         ensureFirestoreOnline {
-            firestore.collection("admin_registry").document("primary").get()
+            firestore.collection("admin_registry").document("primary").get(Source.SERVER)
                 .addOnSuccessListener { doc ->
                     val serverUid = doc.getString("uid").orEmpty()
                     val serverEmail = doc.getString("email").orEmpty()
@@ -230,18 +231,6 @@ class AdminSettingsActivity : AppCompatActivity() {
     }
 
     private fun ensureFirestoreOnline(action: () -> Unit) {
-        tvStatus.text = "Admin Status: CONNECTING SERVER..."
-        firestore.enableNetwork()
-            .addOnSuccessListener {
-                action()
-            }
-            .addOnFailureListener { e ->
-                tvStatus.text = "Admin Status: SERVER OFFLINE"
-                Toast.makeText(
-                    this,
-                    "Firestore server connection ব্যর্থ: ${e.message ?: "Internet/Firestore configuration পরীক্ষা করুন।"}",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+        action()
     }
 }
