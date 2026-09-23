@@ -4,49 +4,82 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 
 class DashboardActivity : AppCompatActivity() {
     private lateinit var partnerCount: TextView
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
     private lateinit var suspendedCount: TextView
+    private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firestore: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
+        firebaseAuth = FirebaseAuth.getInstance()
+        firestore = FirebaseFirestore.getInstance()
         partnerCount = findViewById(R.id.tvPartnerCount)
         pendingCount = findViewById(R.id.tvPendingCount)
         approvedCount = findViewById(R.id.tvApprovedCount)
         suspendedCount = findViewById(R.id.tvSuspendedCount)
-
-        findViewById<Button>(R.id.btnPartners).setOnClickListener {
-            startActivity(Intent(this, PartnerManagementActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnBusiness).setOnClickListener {
-            startActivity(Intent(this, BusinessOverviewActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnFinance).setOnClickListener {
-            startActivity(Intent(this, FinanceProfitActivity::class.java))
-        }
-        findViewById<Button>(R.id.btnSettings).setOnClickListener {
-            startActivity(Intent(this, AdminSettingsActivity::class.java))
-        }
+        findViewById<Button>(R.id.btnPartners).setOnClickListener { startActivity(Intent(this, PartnerManagementActivity::class.java)) }
+        findViewById<Button>(R.id.btnBusiness).setOnClickListener { startActivity(Intent(this, BusinessOverviewActivity::class.java)) }
+        findViewById<Button>(R.id.btnFinance).setOnClickListener { startActivity(Intent(this, FinanceProfitActivity::class.java)) }
+        findViewById<Button>(R.id.btnSettings).setOnClickListener { startActivity(Intent(this, AdminSettingsActivity::class.java)) }
     }
 
     override fun onResume() {
         super.onResume()
-        refreshPartnerSummary()
+        verifyAdminSession()
+    }
+
+    private fun verifyAdminSession() {
+        val user = firebaseAuth.currentUser
+        if (user == null) {
+            forceReauthentication("Admin Gmail session পাওয়া যায়নি।")
+            return
+        }
+        firestore.collection("admin_registry").document("primary").get(Source.SERVER)
+            .addOnSuccessListener { doc ->
+                val serverUid = doc.getString("uid").orEmpty()
+                val serverRole = doc.getString("role").orEmpty()
+                if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
+                    refreshPartnerSummary()
+                } else {
+                    forceReauthentication("এই Firebase account আর Server Admin হিসেবে অনুমোদিত নয়।")
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Server Admin verification ব্যর্থ হয়েছে। Dashboard খোলা থাকবে না।", Toast.LENGTH_LONG).show()
+                forceReauthentication(null)
+            }
+    }
+
+    private fun forceReauthentication(message: String?) {
+        firebaseAuth.signOut()
+        getSharedPreferences("admin_identity", MODE_PRIVATE).edit()
+            .putBoolean("firebase_authenticated", false).remove("admin_email")
+            .putBoolean("admin_connected", false).apply()
+        getSharedPreferences("admin_security", MODE_PRIVATE).edit()
+            .putBoolean("admin_unlocked", false).apply()
+        if (!message.isNullOrBlank()) Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        startActivity(Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
     }
 
     private fun refreshPartnerSummary() {
         val stored = getSharedPreferences("partner_management", MODE_PRIVATE)
             .getStringSet("partners", emptySet()) ?: emptySet()
-
         var pending = 0
         var approved = 0
         var suspended = 0
-
         stored.forEach { entry ->
             when (entry.substringBefore("|")) {
                 "PENDING" -> pending++
@@ -54,7 +87,6 @@ class DashboardActivity : AppCompatActivity() {
                 "SUSPENDED" -> suspended++
             }
         }
-
         partnerCount.text = "Partners\n" + stored.size
         pendingCount.text = "Pending\n" + pending
         approvedCount.text = "Approved\n" + approved
