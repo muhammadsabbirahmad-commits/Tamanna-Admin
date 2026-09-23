@@ -33,7 +33,7 @@ object EnterpriseFirebaseAuth {
                     return@continueWithTask Tasks.forResult(false)
                 }
 
-                ensureAdminRegistry(auth, user.uid, email)
+                ensureAdminRegistry(context, auth, user.uid, email)
             }
         } catch (e: Exception) {
             Tasks.forResult(false)
@@ -41,14 +41,13 @@ object EnterpriseFirebaseAuth {
     }
 
     private fun ensureAdminRegistry(
+        context: Context,
         auth: FirebaseAuth,
         uid: String,
         email: String
     ): Task<Boolean> {
         val firestore = FirebaseFirestore.getInstance(auth.app)
-        val businessId = AdminBusinessContext.getBusinessId(
-            auth.app.applicationContext
-        ).trim()
+        val businessId = AdminBusinessContext.getBusinessId(context).trim()
 
         if (businessId.isBlank() || businessId == AdminBusinessContext.DEFAULT_ID) {
             return Tasks.forResult(false)
@@ -82,4 +81,4 @@ object EnterpriseFirebaseAuth {
                     !blocked
             )
         }
-    }}
+    }\n}
