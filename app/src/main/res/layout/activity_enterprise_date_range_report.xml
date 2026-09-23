@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F7FA">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date Range Reports"
+            android:textColor="#146B4A"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Tamanna Enterprise • Server • Read-only"
+            android:textColor="#5F6368"
+            android:textSize="15sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/btnReportFrom"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="From Date" />
+            <Button
+                android:id="@+id/btnReportTo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:text="To Date" />
+        </LinearLayout>
+        <TextView
+            android:id="@+id/tvReportFrom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="2026-09-23"
+            android:textColor="#222222"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tvReportTo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="2026-09-23"
+            android:textColor="#222222"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+        <TextView android:id="@+id/tvReportSales" android:layout_width="match_parent" android:layout_height="85dp" android:layout_marginTop="20dp" android:background="#FFFFFF" android:gravity="center" android:text="Sales&#10;৳ 0.00" android:textColor="#222222" android:textSize="18sp" android:textStyle="bold" />
+        <TextView android:id="@+id/tvReportPurchase" android:layout_width="match_parent" android:layout_height="85dp" android:layout_marginTop="10dp" android:background="#FFFFFF" android:gravity="center" android:text="Purchase&#10;৳ 0.00" android:textColor="#222222" android:textSize="18sp" android:textStyle="bold" />
+        <TextView android:id="@+id/tvReportProfit" android:layout_width="match_parent" android:layout_height="85dp" android:layout_marginTop="10dp" android:background="#FFFFFF" android:gravity="center" android:text="Gross Profit&#10;৳ 0.00" android:textColor="#146B4A" android:textSize="18sp" android:textStyle="bold" />
+        <TextView android:id="@+id/tvReportSalesQty" android:layout_width="match_parent" android:layout_height="70dp" android:layout_marginTop="10dp" android:background="#FFFFFF" android:gravity="center" android:text="Sales Quantity&#10;0" android:textColor="#222222" android:textSize="16sp" android:textStyle="bold" />
+        <TextView android:id="@+id/tvReportPurchaseQty" android:layout_width="match_parent" android:layout_height="70dp" android:layout_marginTop="10dp" android:background="#FFFFFF" android:gravity="center" android:text="Purchase Quantity&#10;0" android:textColor="#222222" android:textSize="16sp" android:textStyle="bold" />
+        <TextView android:id="@+id/tvReportStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:gravity="center" android:text="Report ready" android:textColor="#5F6368" android:textSize="14sp" />
+        <Button android:id="@+id/btnLoadReport" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Load Report" />
+    </LinearLayout>
+</ScrollView>
