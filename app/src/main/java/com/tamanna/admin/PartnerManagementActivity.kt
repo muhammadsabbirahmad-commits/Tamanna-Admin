@@ -34,7 +34,7 @@ class PartnerManagementActivity : AppCompatActivity() {
         loadPartners()
     }
 
-    private fun partnersRef() = firestore.collection("admin_data").document("root").collection("partners")
+    private fun partnersRef() = firestore.collection("admin_data").document("partners").collection("items")
 
     private fun showAddDialog() {
         val container = android.widget.LinearLayout(this).apply {
