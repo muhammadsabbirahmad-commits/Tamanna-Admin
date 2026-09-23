@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enterprise Products & Stock"
+        android:text="Enterprise Products &amp; Stock"
         android:textColor="#146B4A"
         android:textSize="24sp"
         android:textStyle="bold" />
