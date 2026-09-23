@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="#F5F7FA">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Enterprise Products & Stock"
+        android:textColor="#146B4A"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvProductStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:padding="12dp"
+        android:background="#FFFFFF"
+        android:text="Enterprise Product Data: যাচাই হচ্ছে..."
+        android:textColor="#146B4A"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btnRefreshProducts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Refresh" />
+
+    <ListView
+        android:id="@+id/lvEnterpriseProducts"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp"
+        android:background="#FFFFFF" />
+
+</LinearLayout>
