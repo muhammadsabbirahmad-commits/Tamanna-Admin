@@ -12,12 +12,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 
 class DashboardActivity : AppCompatActivity() {
-    private val enterpriseGoogleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        EnterpriseAccessManager.finishEnterpriseGoogleSignIn(this, result.data, { refreshEnterpriseConnection() }, { message ->
-            enterpriseConnectionStatus.text = "Tamanna Enterprise: Firebase Connection Failed\n" + message
-        })
-    }
-
     private lateinit var partnerCount: TextView
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
