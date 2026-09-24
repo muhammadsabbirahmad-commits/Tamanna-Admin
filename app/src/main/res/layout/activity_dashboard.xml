@@ -1,190 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#F5F7FA">
-
+    android:layout_height="match_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tamanna Admin"
-            android:textColor="#146B4A"
             android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Admin Dashboard"
-            android:textColor="#5F6368"
-            android:textSize="16sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/tvPartnerCount"
-                android:layout_width="0dp"
-                android:layout_height="92dp"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_dashboard_card"
-                android:gravity="center"
-                android:text="Partners\n0"
-                android:textColor="#222222"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvPendingCount"
-                android:layout_width="0dp"
-                android:layout_height="92dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:text="Pending\n0"
-                android:textColor="#222222"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/tvApprovedCount"
-                android:layout_width="0dp"
-                android:layout_height="78dp"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:text="Approved\n0"
-                android:textColor="#222222"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSuspendedCount"
-                android:layout_width="0dp"
-                android:layout_height="78dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:text="Suspended\n0"
-                android:textColor="#222222"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvEnterpriseConnectionStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:padding="14dp"
-            android:background="@drawable/bg_status_card"
-            android:text="Tamanna Enterprise: যাচাই হচ্ছে..."
-            android:textColor="#146B4A"
-            android:textSize="14sp" />
-
-        <TextView
+            android:id="@+id/tvAdminStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Admin Controls"
-            android:textColor="#146B4A"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Enterprise &amp; Partner Management"
-            android:textColor="#146B4A"
+            android:padding="16dp"
+            android:text="Admin Gmail: Not connected"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnConnectAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Connect Admin Gmail" />
 
         <Button
             android:id="@+id/btnUserApproval"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="20dp"
             android:text="Enterprise User Approval" />
-
-        <Button
-            android:id="@+id/btnPartners"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Partner Management" />
-
-        <Button
-            android:id="@+id/btnProducts"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Enterprise Products &amp; Stock" />
-
-        <Button
-            android:id="@+id/btnSalesPurchase"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Enterprise Sales &amp; Purchase" />
-
-        <Button
-            android:id="@+id/btnReports"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Date Range Reports" />
-
-        <Button
-            android:id="@+id/btnBusiness"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Business Overview" />
-
-        <Button
-            android:id="@+id/btnFinance"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Finance &amp; Profit" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Reports &amp; Administration"
-            android:textColor="#146B4A"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btnSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Admin Settings" />
-    <Button android:id="@+id/btnAudit" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Admin Audit Log" />
-</LinearLayout>
+    </LinearLayout>
 </ScrollView>
