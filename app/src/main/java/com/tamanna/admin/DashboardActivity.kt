@@ -125,31 +125,57 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun verifyAdminUser(user: FirebaseUser) {
-        enterpriseConnectionStatus.text = "Admin Gmail যাচাই করা হচ্ছে…"
-        firestore.collection("admin_registry").document("primary").get(Source.SERVER)
-            .addOnSuccessListener { doc ->
-                val serverUid = doc.getString("uid").orEmpty()
-                val serverRole = doc.getString("role").orEmpty()
+        enterpriseConnectionStatus.text =
+            "Admin Gmail যাচাই করা হচ্ছে…\nUID: ${user.uid}"
 
-                if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
-                    refreshPartnerSummary()
-                    enterpriseConnectionStatus.text =
-                        "Tamanna Enterprise: Authorization ready\nEnterprise User Approval খুলে Admin authorization সম্পন্ন করুন।"
-                } else {
-                    val detail = "Server Admin record মিলেনি। UID/role যাচাই করুন।"
+        // Force-refresh the Firebase ID token before the Firestore request.
+        // This prevents a stale/expired authentication token from causing
+        // a false PERMISSION_DENIED immediately after Google sign-in.
+        user.getIdToken(true)
+            .addOnSuccessListener {
+                val currentUser = firebaseAuth.currentUser
+
+                if (currentUser == null || currentUser.uid != user.uid) {
+                    val detail = "Firebase Auth session পাওয়া যায়নি।"
                     Toast.makeText(this, detail, Toast.LENGTH_LONG).show()
                     enterpriseConnectionStatus.text = detail
+                    return@addOnSuccessListener
                 }
+
+                firestore.collection("admin_registry").document("primary").get(Source.SERVER)
+                    .addOnSuccessListener { doc ->
+                        val serverUid = doc.getString("uid").orEmpty()
+                        val serverRole = doc.getString("role").orEmpty()
+
+                        if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
+                            refreshPartnerSummary()
+                            enterpriseConnectionStatus.text =
+                                "Tamanna Enterprise: Authorization ready\nEnterprise User Approval খুলে Admin authorization সম্পন্ন করুন।"
+                        } else {
+                            val detail =
+                                "Server Admin record মিলেনি।\nLogin UID: ${user.uid}\nServer UID: $serverUid\nRole: $serverRole"
+                            Toast.makeText(this, detail, Toast.LENGTH_LONG).show()
+                            enterpriseConnectionStatus.text = detail
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        val detail = e.message?.takeIf { it.isNotBlank() }
+                            ?: "অজানা Firestore error"
+                        val diagnostic =
+                            "Firestore verification error: $detail\nFirebase UID: ${currentUser.uid}"
+                        Toast.makeText(this, diagnostic, Toast.LENGTH_LONG).show()
+                        enterpriseConnectionStatus.text = diagnostic
+                    }
             }
             .addOnFailureListener { e ->
                 val detail = e.message?.takeIf { it.isNotBlank() }
-                    ?: "অজানা Firestore error"
+                    ?: "Firebase ID token refresh ব্যর্থ হয়েছে।"
                 Toast.makeText(
                     this,
-                    "Server Admin verification ব্যর্থ: $detail",
+                    "Firebase authentication token যাচাই ব্যর্থ: $detail",
                     Toast.LENGTH_LONG
                 ).show()
-                enterpriseConnectionStatus.text = "Firestore verification error: $detail"
+                enterpriseConnectionStatus.text = "Authentication error: $detail"
             }
     }
 
