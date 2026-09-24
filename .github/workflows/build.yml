@@ -1,4 +1,5 @@
 name: Build Tamanna Admin
+# Release build includes Firebase token-refresh fix from commit adef858911d09f23932fe12660525a752116ff03
 
 on:
   push:
