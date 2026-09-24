@@ -2,6 +2,7 @@ package com.tamanna.admin
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -20,6 +21,12 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var status: TextView
     private var busy = false
+
+    // Dashboard Stats Views
+    private lateinit var statsContainer: View
+    private lateinit var tvActiveCount: TextView
+    private lateinit var tvPendingCount: TextView
+    private lateinit var tvBlockedCount: TextView
 
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -59,11 +66,14 @@ class DashboardActivity : AppCompatActivity() {
         if (!AdminSecurityGuard.requireUnlocked(this)) return
         setContentView(R.layout.activity_dashboard)
         
-        // এখানে Enterprise কানেকশন ব্যবহার করা হয়েছে
         db = EnterpriseFirebaseConnection.getFirestore(this)
         auth = FirebaseAuth.getInstance(db.app)
         
         status = findViewById(R.id.tvAdminStatus)
+        statsContainer = findViewById(R.id.statsContainer)
+        tvActiveCount = findViewById(R.id.tvActiveCount)
+        tvPendingCount = findViewById(R.id.tvPendingCount)
+        tvBlockedCount = findViewById(R.id.tvBlockedCount)
 
         findViewById<Button>(R.id.btnConnectAdmin).setOnClickListener { connect() }
         findViewById<Button>(R.id.btnUserApproval).setOnClickListener {
@@ -85,15 +95,21 @@ class DashboardActivity : AppCompatActivity() {
     private fun refresh() {
         val p = getSharedPreferences("admin_identity", MODE_PRIVATE)
         val email = p.getString("admin_email", "").orEmpty()
-        status.text = if (p.getBoolean("admin_connected", false) && email.isNotBlank())
-            "Admin Gmail: $email\nStatus: CONNECTED"
-        else "Admin Gmail: Not connected\nStatus: অপেক্ষমাণ"
+        val isConnected = p.getBoolean("admin_connected", false) && email.isNotBlank()
+        
+        if (isConnected) {
+            status.text = "Admin Gmail: $email\nStatus: CONNECTED"
+            statsContainer.visibility = View.VISIBLE
+            loadDashboardStats()
+        } else {
+            status.text = "Admin Gmail: Not connected\nStatus: অপেক্ষমাণ"
+            statsContainer.visibility = View.GONE
+        }
     }
 
     private fun connect() {
         if (busy) return
         busy = true
-        // এখানে Enterprise Client ID ব্যবহার করা হয়েছে
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("241311598063-d6pqnutv6598pj4lmsikqs7bsfs0m0bs.apps.googleusercontent.com")
             .requestEmail()
@@ -107,7 +123,6 @@ class DashboardActivity : AppCompatActivity() {
     private fun verify(uid: String, email: String) {
         status.text = "Server Admin যাচাই হচ্ছে…"
         
-        // ডেটাবেসের appConfig কালেকশন চেক করা হচ্ছে
         db.collection("appConfig").document("admin").get(Source.SERVER)
             .addOnSuccessListener { doc ->
                 if (doc.exists() &&
@@ -119,8 +134,12 @@ class DashboardActivity : AppCompatActivity() {
                         .putString("admin_email", email)
                         .putBoolean("admin_connected", true)
                         .apply()
+                        
                     status.text = "Admin Gmail: $email\nStatus: CONNECTED"
-                    Toast.makeText(this, "Admin Gmail Connected হয়েছে।", Toast.LENGTH_LONG).show()
+                    statsContainer.visibility = View.VISIBLE
+                    Toast.makeText(this, "Admin Gmail Connected হয়েছে।", Toast.LENGTH_SHORT).show()
+                    loadDashboardStats()
+                    
                 } else {
                     auth.signOut()
                     getSharedPreferences("admin_identity", MODE_PRIVATE).edit()
@@ -129,10 +148,47 @@ class DashboardActivity : AppCompatActivity() {
                         .putBoolean("admin_connected", false)
                         .apply()
                     show("এই Gmail-এর Enterprise Admin অনুমোদন নেই।")
+                    statsContainer.visibility = View.GONE
                 }
             }
             .addOnFailureListener { e ->
                 show("Firestore verification error: " + (e.message ?: "Permission denied"))
+            }
+    }
+
+    private fun loadDashboardStats() {
+        // ফায়ারবেস থেকে রিয়েল-টাইম ডাটা কাউন্ট করা হচ্ছে
+        db.collection("accessRequests").get(Source.SERVER)
+            .addOnSuccessListener { snapshot ->
+                var activeCount = 0
+                var pendingCount = 0
+                var blockedCount = 0
+                val now = System.currentTimeMillis()
+
+                for (document in snapshot.documents) {
+                    val reqStatus = document.getString("status") ?: "PENDING"
+                    val expiresAt = document.getLong("expiresAt") ?: 0L
+
+                    // EnterpriseAccessManager এর লজিক অনুযায়ী স্ট্যাটাস ফিল্টার
+                    if (reqStatus == "ACTIVE" && expiresAt > now) {
+                        activeCount++
+                    } else if (reqStatus == "PENDING" || reqStatus == "") {
+                        pendingCount++
+                    } else if (reqStatus == "BLOCKED") {
+                        blockedCount++
+                    }
+                }
+
+                // UI তে ডেটা বসানো
+                tvActiveCount.text = activeCount.toString()
+                tvPendingCount.text = pendingCount.toString()
+                tvBlockedCount.text = blockedCount.toString()
+            }
+            .addOnFailureListener {
+                // এরর হলে ০ দেখাবে
+                tvActiveCount.text = "0"
+                tvPendingCount.text = "0"
+                tvBlockedCount.text = "0"
             }
     }
 
