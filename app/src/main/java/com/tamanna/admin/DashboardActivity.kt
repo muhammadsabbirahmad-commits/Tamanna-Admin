@@ -114,21 +114,18 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun verifyAdminSession() {
-        val listener = FirebaseAuth.AuthStateListener { auth ->
-            val user = auth.currentUser
-            if (user == null) {
-                openAdminGmailSetup()
-            } else {
-                verifyAdminUser(user)
-            }
+        // Always select the Admin Gmail after Master PIN; never trust a stale Firebase session.
+        firebaseAuth.signOut()
+        GoogleSignIn.getClient(
+            this,
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+        ).signOut().addOnCompleteListener {
+            openAdminGmailSetup()
         }
-
-        authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
-        authStateListener = listener
-        firebaseAuth.addAuthStateListener(listener)
     }
 
     private fun verifyAdminUser(user: FirebaseUser) {
+        enterpriseConnectionStatus.text = "Admin Gmail যাচাই করা হচ্ছে…"
         firestore.collection("admin_registry").document("primary").get(Source.SERVER)
             .addOnSuccessListener { doc ->
                 val serverUid = doc.getString("uid").orEmpty()
@@ -136,14 +133,23 @@ class DashboardActivity : AppCompatActivity() {
 
                 if (doc.exists() && serverUid == user.uid && serverRole == "admin") {
                     refreshPartnerSummary()
-                    enterpriseConnectionStatus.text = "Tamanna Enterprise: Authorization ready\\nEnterprise User Approval খুলে Admin authorization সম্পন্ন করুন।"
+                    enterpriseConnectionStatus.text =
+                        "Tamanna Enterprise: Authorization ready\nEnterprise User Approval খুলে Admin authorization সম্পন্ন করুন।"
                 } else {
-                    forceReauthentication("এই Gmail Server Admin হিসেবে অনুমোদিত নয়। অনুমোদিত Admin Gmail নির্বাচন করুন।", true)
+                    val detail = "Server Admin record মিলেনি। UID/role যাচাই করুন।"
+                    Toast.makeText(this, detail, Toast.LENGTH_LONG).show()
+                    enterpriseConnectionStatus.text = detail
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Server Admin verification ব্যর্থ হয়েছে। Dashboard খোলা থাকবে না.", Toast.LENGTH_LONG).show()
-                forceReauthentication(null)
+            .addOnFailureListener { e ->
+                val detail = e.message?.takeIf { it.isNotBlank() }
+                    ?: "অজানা Firestore error"
+                Toast.makeText(
+                    this,
+                    "Server Admin verification ব্যর্থ: $detail",
+                    Toast.LENGTH_LONG
+                ).show()
+                enterpriseConnectionStatus.text = "Firestore verification error: $detail"
             }
     }
 
