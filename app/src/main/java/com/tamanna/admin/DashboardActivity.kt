@@ -58,8 +58,11 @@ class DashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (!AdminSecurityGuard.requireUnlocked(this)) return
         setContentView(R.layout.activity_dashboard)
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
+        
+        // এখানে Enterprise কানেকশন ব্যবহার করা হয়েছে
+        db = EnterpriseFirebaseConnection.getFirestore(this)
+        auth = FirebaseAuth.getInstance(db.app)
+        
         status = findViewById(R.id.tvAdminStatus)
 
         findViewById<Button>(R.id.btnConnectAdmin).setOnClickListener { connect() }
@@ -90,10 +93,12 @@ class DashboardActivity : AppCompatActivity() {
     private fun connect() {
         if (busy) return
         busy = true
+        // এখানে Enterprise Client ID ব্যবহার করা হয়েছে
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken("241311598063-d6pqnutv6598pj4lmsikqs7bsfs0m0bs.apps.googleusercontent.com")
             .requestEmail()
             .build()
+            
         GoogleSignIn.getClient(this, options).signOut().addOnCompleteListener {
             launcher.launch(GoogleSignIn.getClient(this, options).signInIntent)
         }
