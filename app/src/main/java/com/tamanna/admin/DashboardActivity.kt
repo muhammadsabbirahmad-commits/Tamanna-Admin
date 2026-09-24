@@ -5,7 +5,11 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,6 +24,39 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
+    private var googleSignInInProgress = false
+
+    private val googleLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        googleSignInInProgress = false
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken.orEmpty()
+            if (idToken.isBlank()) {
+                Toast.makeText(this, "Google ID token পাওয়া যায়নি। আবার Gmail দিয়ে চেষ্টা করুন।", Toast.LENGTH_LONG).show()
+                return@registerForActivityResult
+            }
+            val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, null)
+            firebaseAuth.signInWithCredential(credential)
+                .addOnSuccessListener { authResult ->
+                    val signedUser = authResult.user
+                    if (signedUser == null) {
+                        Toast.makeText(this, "Firebase Google Login ব্যর্থ হয়েছে।", Toast.LENGTH_LONG).show()
+                    } else {
+                        verifyAdminUser(signedUser)
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Firebase Google Login ব্যর্থ হয়েছে: " + (e.message ?: "আবার চেষ্টা করুন।"), Toast.LENGTH_LONG).show()
+                }
+        } catch (e: ApiException) {
+            Toast.makeText(this, "Google Sign-In বাতিল/ব্যর্থ হয়েছে। Error code: " + e.statusCode, Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Google account সংযোগ ব্যর্থ হয়েছে।", Toast.LENGTH_LONG).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,7 +138,7 @@ class DashboardActivity : AppCompatActivity() {
                     refreshPartnerSummary()
                     enterpriseConnectionStatus.text = "Tamanna Enterprise: Authorization ready\\nEnterprise User Approval খুলে Admin authorization সম্পন্ন করুন।"
                 } else {
-                    forceReauthentication("এই Firebase account আর Server Admin হিসেবে অনুমোদিত নয়।")
+                    forceReauthentication("এই Gmail Server Admin হিসেবে অনুমোদিত নয়। অনুমোদিত Admin Gmail নির্বাচন করুন।", true)
                 }
             }
             .addOnFailureListener {
@@ -112,11 +149,25 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun openAdminGmailSetup() {
         enterpriseConnectionStatus.text =
-            "Tamanna Enterprise: Admin Gmail সংযুক্ত নেই\nEnterprise User Approval খুললে Enterprise authorization করা যাবে।"
+            "Tamanna Admin: Admin Gmail সংযুক্ত নেই\nGoogle Sign-In দিয়ে অনুমোদিত Admin Gmail নির্বাচন করুন।"
+        launchAdminGoogleSignIn()
     }
 
-    private fun forceReauthentication(message: String?) {
+    private fun launchAdminGoogleSignIn() {
+        if (googleSignInInProgress) return
+        googleSignInInProgress = true
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        googleLauncher.launch(GoogleSignIn.getClient(this, options).signInIntent)
+    }
+
+    private fun forceReauthentication(message: String?, launchGoogle: Boolean = false) {
         firebaseAuth.signOut()
+        if (launchGoogle) {
+            GoogleSignIn.getClient(this, GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()).signOut()
+        }
         getSharedPreferences("admin_identity", MODE_PRIVATE).edit()
             .putBoolean("firebase_authenticated", false)
             .remove("admin_email")
@@ -132,6 +183,9 @@ class DashboardActivity : AppCompatActivity() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
+        if (launchGoogle) {
+            window.decorView.postDelayed({ launchAdminGoogleSignIn() }, 350)
+        }
     }
 
     private fun refreshPartnerSummary() {
