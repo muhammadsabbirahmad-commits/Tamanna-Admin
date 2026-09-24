@@ -106,11 +106,14 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun verify(uid: String, email: String) {
         status.text = "Server Admin যাচাই হচ্ছে…"
-        db.collection("admin_registry").document("primary").get(Source.SERVER)
+        
+        // ডেটাবেসের appConfig কালেকশন চেক করা হচ্ছে
+        db.collection("appConfig").document("admin").get(Source.SERVER)
             .addOnSuccessListener { doc ->
                 if (doc.exists() &&
                     doc.getString("uid") == uid &&
-                    doc.getString("role") == "admin") {
+                    doc.getString("role")?.uppercase() == "ADMIN") {
+                    
                     getSharedPreferences("admin_identity", MODE_PRIVATE).edit()
                         .putBoolean("firebase_authenticated", true)
                         .putString("admin_email", email)
@@ -125,7 +128,7 @@ class DashboardActivity : AppCompatActivity() {
                         .remove("admin_email")
                         .putBoolean("admin_connected", false)
                         .apply()
-                    show("এই Gmail Admin নয়। Server Admin Gmail পরিবর্তন করা যাবে না।")
+                    show("এই Gmail-এর Enterprise Admin অনুমোদন নেই।")
                 }
             }
             .addOnFailureListener { e ->
