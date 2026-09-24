@@ -6,21 +6,13 @@
         android:label="Tamanna Admin"
         android:allowBackup="false"
         android:supportsRtl="true">
-        <activity android:name=".DashboardActivity" android:exported="false" />
         <activity android:name=".EnterpriseUserApprovalActivity" android:exported="false" />
-        <activity android:name=".PartnerManagementActivity" android:exported="false" />
-        <activity android:name=".BusinessOverviewActivity" android:exported="false" />
-        <activity android:name=".FinanceProfitActivity" android:exported="false" />
-        <activity android:name=".EnterpriseProductsActivity" android:exported="false" />
-        <activity android:name=".EnterpriseSalesPurchaseActivity" android:exported="false" />
-        <activity android:name=".EnterpriseDateRangeReportActivity" android:exported="false" />
-        <activity android:name=".AdminSettingsActivity" android:exported="false" />
+        <activity android:name=".DashboardActivity" android:exported="false" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".AdminAuditActivity" android:exported="false" />
     </application>
 </manifest>
