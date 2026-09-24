@@ -36,8 +36,17 @@ class DashboardActivity : AppCompatActivity() {
             auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null))
                 .addOnSuccessListener {
                     val user = auth.currentUser
-                    if (user == null) show("Admin login সম্পন্ন হয়নি।")
-                    else verify(user.uid, user.email.orEmpty())
+                    if (user == null) {
+                        show("Admin login সম্পন্ন হয়নি।")
+                    } else {
+                        user.getIdToken(true)
+                            .addOnSuccessListener {
+                                verify(user.uid, user.email.orEmpty())
+                            }
+                            .addOnFailureListener { e ->
+                                show("Firebase token refresh ব্যর্থ: " + (e.message ?: "Unknown error"))
+                            }
+                    }
                 }
                 .addOnFailureListener { show("Gmail login ব্যর্থ।") }
         } catch (_: Exception) {
