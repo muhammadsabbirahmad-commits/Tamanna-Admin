@@ -3,7 +3,6 @@ package com.tamanna.admin
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
-import android.content.Intent
 import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -56,7 +55,7 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
         if (request.expiresAt > 0L) addTextTo(box, "Expiry: ${formatDate(request.expiresAt)}", 14, false)
 
         when (request.status) {
-            EnterpriseAccessManager.PENDING, EnterpriseAccessManager.REJECTED, EnterpriseAccessManager.EXPIRED -> {
+            EnterpriseAccessManager.PENDING, EnterpriseAccessManager.EXPIRED -> {
                 val duration = Spinner(this)
                 duration.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item,
                     arrayOf("3 days","5 days","7 days","15 days","1 month","3 months","6 months","1 year","Custom"))
@@ -83,9 +82,11 @@ class EnterpriseUserApprovalActivity : AppCompatActivity() {
                     EnterpriseAccessManager.updateRequest(this,enterpriseGoogleLauncher,request,EnterpriseAccessManager.ACTIVE,now,expiry,request.notificationsEnabled,
                         {Toast.makeText(this,"User ACTIVE করা হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
                 }
+                // Reject বাটনে ক্লিক করলে সরাসরি ডিলিট হয়ে যাবে
                 reject.setOnClickListener {
-                    EnterpriseAccessManager.updateRequest(this,enterpriseGoogleLauncher,request,EnterpriseAccessManager.REJECTED,0L,0L,request.notificationsEnabled,
-                        {Toast.makeText(this,"Request REJECTED হয়েছে।",Toast.LENGTH_SHORT).show();load()},{Toast.makeText(this,it,Toast.LENGTH_LONG).show()})
+                    EnterpriseAccessManager.deleteRequest(this, enterpriseGoogleLauncher, request.uid,
+                        { Toast.makeText(this, "Request মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show(); load() },
+                        { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
                 }
             }
             EnterpriseAccessManager.ACTIVE -> {
