@@ -11,14 +11,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 
-data class EnterpriseAccessRequest(
-    val uid: String,
-    val email: String,
-    val status: String,
-    val startAt: Long,
-    val expiresAt: Long,
-    val notificationsEnabled: Boolean
-)
+data class EnterpriseAccessRequest(val uid:String,val email:String,val status:String,val startAt:Long,val expiresAt:Long,val notificationsEnabled:Boolean)
 
 object EnterpriseAccessManager {
     private const val COLLECTION = "accessRequests"
@@ -184,13 +177,11 @@ object EnterpriseAccessManager {
                             .mapNotNull { document ->
                                 val uid = document.getString("uid").orEmpty()
                                 val email = document.getString("email").orEmpty()
-                                var status = document.getString("status").orEmpty().ifBlank { PENDING }
-
-                                // REJECTED রিকোয়েস্টগুলো ফিল্টার করে বাদ দেওয়া হচ্ছে
-                                if (uid.isBlank() || email.isBlank() || status == REJECTED) {
+                                if (uid.isBlank() || email.isBlank()) {
                                     null
                                 } else {
                                     val expiresAt = document.getLong("expiresAt") ?: 0L
+                                    var status = document.getString("status").orEmpty().ifBlank { PENDING }
                                     if (status == ACTIVE && expiresAt > 0 && expiresAt <= now) {
                                         status = EXPIRED
                                     }
@@ -243,7 +234,7 @@ object EnterpriseAccessManager {
         }, onError)
     }
 
-    // রিকোয়েস্ট সম্পূর্ণ মুছে ফেলার লজিক (Reject করলে এটি কল হবে)
+    // Reject করলে সরাসরি রিকোয়েস্ট মুছে ফেলার ফাংশন
     fun deleteRequest(
         context: Context,
         launcher: ActivityResultLauncher<Intent>,
